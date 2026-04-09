@@ -2,6 +2,8 @@
 
 A personal fitness tracker built as an installable progressive web app (PWA). Pick a session, run through the workout, log your sets, and watch your streak grow.
 
+> This is a personal project I built for myself, but it's MIT licensed — fork it, steal the exercise library, change the sessions, do whatever makes it useful for you. No warranty, no roadmap, no support promises.
+
 ## Sessions
 
 Four strength templates plus mobility and conditioning:

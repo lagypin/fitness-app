@@ -1,4 +1,4 @@
-// ─── Lindsay's Exercise Database ──────────────────────────────────────────────
+// ─── Exercise Database ────────────────────────────────────────────────────────
 //
 // Categories:
 //   squat    — back squat, front squat, and squat-pattern variations
