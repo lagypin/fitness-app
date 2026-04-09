@@ -809,7 +809,7 @@ export default function App() {
         <div className="header">
           <div className="header-top">
             <div>
-              <div className="app-title">Let's move, Lindsay.</div>
+              <div className="app-title">Let's move.</div>
               <div className="app-sub">
                 {new Date().toLocaleDateString("en-US", {
                   weekday: "long", month: "long", day: "numeric",
