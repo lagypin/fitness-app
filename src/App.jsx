@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { EXERCISES, SESSION_TEMPLATES, swapOptions } from "./exercises.js";
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
@@ -113,7 +113,7 @@ input[type=number] { -moz-appearance: textfield; }
 .app { width: 100%; max-width: 480px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
 
 /* ── Header ── */
-.header { background: var(--hot); padding: 22px 22px 16px; position: relative; overflow: hidden; }
+.header { background: var(--hot); padding: calc(22px + env(safe-area-inset-top)) 22px 16px; position: relative; overflow: hidden; }
 .header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.08); }
 .header-top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1; }
 .app-title { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.1; }
@@ -149,6 +149,10 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* ── Buttons ── */
 .btn-primary { width: 100%; margin-top: 14px; padding: 15px; border-radius: var(--radius); border: none; background: var(--hot); color: #fff; font-size: 14px; font-weight: 700; font-family: var(--font); cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(255,45,120,0.35); }
+.backup-bar { display: flex; gap: 10px; margin-bottom: 14px; }
+.backup-btn { flex: 1; padding: 12px; border-radius: var(--radius); border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: #fff; font-size: 13px; font-weight: 600; font-family: var(--font); cursor: pointer; transition: all 0.15s; }
+.backup-btn:hover:not(:disabled) { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+.backup-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-primary:hover { background: var(--hot-dark); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(255,45,120,0.45); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
@@ -160,7 +164,7 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* ── Session screen (full screen) ── */
 .session-screen { position: fixed; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: var(--bg); z-index: 100; display: flex; flex-direction: column; }
-.session-header { background: var(--hot); padding: 20px 18px 14px; position: sticky; top: 0; z-index: 10; flex-shrink: 0; }
+.session-header { background: var(--hot); padding: calc(20px + env(safe-area-inset-top)) 18px 14px; position: sticky; top: 0; z-index: 10; flex-shrink: 0; }
 .session-header-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .session-title { font-size: 18px; font-weight: 800; color: #fff; }
 .session-meta { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 3px; }
@@ -522,20 +526,108 @@ function LibraryScreen() {
 }
 
 // ─── LogScreen ────────────────────────────────────────────────────────────────
-function LogScreen({ sessions }) {
+function LogScreen({ sessions, setSessions }) {
+  const fileInputRef = useRef(null);
+
+  const handleExport = async () => {
+    const payload = {
+      app: "move",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      sessions,
+    };
+    const json = JSON.stringify(payload, null, 2);
+    const filename = `move-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    const file = new File([json], filename, { type: "application/json" });
+
+    // Try Web Share API with files first (best UX on iOS/Android)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "Move backup" });
+        return;
+      } catch (err) {
+        if (err.name === "AbortError") return; // user cancelled
+        // fall through to download
+      }
+    }
+
+    // Fallback: trigger a download
+    const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportClick = () => fileInputRef.current?.click();
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // reset so same file can be picked again
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const incoming = Array.isArray(data) ? data : data.sessions;
+      if (!Array.isArray(incoming)) throw new Error("File is not a Move backup");
+
+      const replace = window.confirm(
+        `Import ${incoming.length} sessions?\n\nOK = replace your current history\nCancel = merge with existing history`
+      );
+
+      if (replace) {
+        setSessions(incoming);
+        LS.set("wapp_sessions", incoming);
+      } else {
+        const existingIds = new Set(sessions.map(s => s.id));
+        const merged = [...sessions, ...incoming.filter(s => !existingIds.has(s.id))]
+          .sort((a, b) => new Date(a.date) - new Date(b.date));
+        setSessions(merged);
+        LS.set("wapp_sessions", merged);
+      }
+    } catch (err) {
+      window.alert(`Couldn't import file: ${err.message}`);
+    }
+  };
+
+  const backupBar = (
+    <div className="backup-bar">
+      <button className="backup-btn" onClick={handleExport} disabled={!sessions.length}>
+        ⬆ Backup
+      </button>
+      <button className="backup-btn" onClick={handleImportClick}>
+        ⬇ Restore
+      </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        style={{ display: "none" }}
+        onChange={handleImportFile}
+      />
+    </div>
+  );
+
   if (!sessions.length) {
     return (
-      <div className="empty">
-        <div className="empty-icon">📋</div>
-        <div className="empty-text">
-          No sessions yet.<br />Complete a workout to start your log.
+      <>
+        {backupBar}
+        <div className="empty">
+          <div className="empty-icon">📋</div>
+          <div className="empty-text">
+            No sessions yet.<br />Complete a workout to start your log.
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
     <>
+      {backupBar}
       {[...sessions].reverse().map(sess => {
         const def = SESSION_DEFS.find(d => d.id === sess.templateId);
         return (
@@ -761,7 +853,7 @@ export default function App() {
             />
           )}
           {tab === "library" && <LibraryScreen />}
-          {tab === "log"     && <LogScreen sessions={sessions} />}
+          {tab === "log"     && <LogScreen sessions={sessions} setSessions={setSessions} />}
         </div>
 
       </div>
