@@ -159,7 +159,7 @@ input[type=number] { -moz-appearance: textfield; }
 .active-banner-arrow { font-size: 18px; color: var(--hot); }
 
 /* ── Session screen (full screen) ── */
-.session-screen { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; max-width: 480px; left: 50%; transform: translateX(-50%); }
+.session-screen { position: fixed; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: var(--bg); z-index: 100; display: flex; flex-direction: column; }
 .session-header { background: var(--hot); padding: 20px 18px 14px; position: sticky; top: 0; z-index: 10; flex-shrink: 0; }
 .session-header-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .session-title { font-size: 18px; font-weight: 800; color: #fff; }
