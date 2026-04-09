@@ -113,7 +113,7 @@ input[type=number] { -moz-appearance: textfield; }
 .app { width: 100%; max-width: 480px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
 
 /* ── Header ── */
-.header { background: var(--hot); padding: 22px 22px 16px; position: relative; overflow: hidden; }
+.header { background: var(--hot); padding: calc(22px + env(safe-area-inset-top)) 22px 16px; position: relative; overflow: hidden; }
 .header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.08); }
 .header-top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1; }
 .app-title { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.1; }
