@@ -7,12 +7,22 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      workbox: {
+        // Keep the web font available offline after the first visit.
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
+            handler: "StaleWhileRevalidate",
+            options: { cacheName: "google-fonts", expiration: { maxEntries: 12, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+          },
+        ],
+      },
       includeAssets: ["favicon.svg", "apple-touch-icon.png"],
       manifest: {
         name: "Move",
         short_name: "Move",
         description: "Personal fitness tracker",
-        theme_color: "#ff2d78",
+        theme_color: "#c2185b",
         background_color: "#000000",
         display: "standalone",
         orientation: "portrait",

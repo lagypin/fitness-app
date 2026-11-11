@@ -6,7 +6,7 @@
 //   press    — horizontal and vertical push
 //   pull     — rows, ring rows, pull-ups, curls
 //   core     — carries, anti-rotation, stability
-//   mobility — PT exercises, stretching, warm-up/cool-down work
+//   mobility — stretching, warm-up/cool-down work, foot care
 //
 // isAnchor: true = main lift for a session (goes heavy, programmed first)
 // isAnchor: false = accessory work (supports the anchor, programmed after)
@@ -85,17 +85,6 @@ export const EXERCISES = [
     defaultSets: 3,
     defaultReps: "8",
     notes: "Each side. Rear foot elevated on bench. Front shin stays vertical. Brutal but effective.",
-  },
-  {
-    id: "ex_spanish_squat",
-    name: "Spanish Squat",
-    category: "squat",
-    isAnchor: false,
-    equipment: ["band"],
-    muscles: ["quads", "knees"],
-    defaultSets: 3,
-    defaultReps: "10",
-    notes: "Joe's PT. Band around rack at shin height. Sit back and down, shins stay vertical.",
   },
   {
     id: "ex_landmine_squat",
@@ -660,52 +649,8 @@ export const EXERCISES = [
     notes: "Slow and controlled — not a cardio sprint. Keep hips low and stable.",
   },
 
-  // ── MOBILITY / PT ──────────────────────────────────────────────────────────
+  // ── MOBILITY ───────────────────────────────────────────────────────────────
 
-  {
-    id: "ex_diagonal_hip_sinks",
-    name: "Diagonal Hip Sinks",
-    category: "mobility",
-    isAnchor: false,
-    equipment: ["bodyweight"],
-    muscles: ["hip_flexors", "glutes"],
-    defaultSets: 1,
-    defaultReps: "10",
-    notes: "Joe's PT. Each side. Slow and intentional. Great hip mobility warm-up.",
-  },
-  {
-    id: "ex_midfoot_mobilization",
-    name: "Midfoot Mobilization",
-    category: "mobility",
-    isAnchor: false,
-    equipment: ["bodyweight"],
-    muscles: ["foot", "ankle"],
-    defaultSets: 1,
-    defaultReps: "10",
-    notes: "Joe's PT. Each side. Keeps the foot supple and ready to load.",
-  },
-  {
-    id: "ex_yielding_hip",
-    name: "Yielding Hip Exercises",
-    category: "mobility",
-    isAnchor: false,
-    equipment: ["bodyweight"],
-    muscles: ["hip_flexors", "adductors"],
-    defaultSets: 1,
-    defaultReps: "10",
-    notes: "Joe's PT. Each side.",
-  },
-  {
-    id: "ex_knee_extensions",
-    name: "Knee Extensions",
-    category: "mobility",
-    isAnchor: false,
-    equipment: ["bodyweight"],
-    muscles: ["quads"],
-    defaultSets: 1,
-    defaultReps: "15",
-    notes: "Joe's PT. Slow and full range. Quad rehab and activation.",
-  },
   {
     id: "ex_calf_raises",
     name: "Calf Raises",
@@ -839,6 +784,229 @@ export const EXERCISES = [
     notes: "Easy recovery pace OR sprint intervals (30 sec on / 2 min off × 8–10 rounds). Two totally different sessions.",
   },
 
+  // ── Added in v2, each with a form guide in the ACE exercise library ────────
+
+  {
+    id: "ex_lateral_lunge",
+    name: "Lateral Lunge",
+    category: "squat",
+    isAnchor: false,
+    equipment: ["dumbbell"],
+    muscles: ["quads", "glutes", "adductors"],
+    defaultSets: 3,
+    defaultReps: "8",
+    notes: "Each side. Step wide, sit the hips back over the stepping leg, keep the other leg straight. Push back to standing.",
+  },
+  {
+    id: "ex_bodyweight_squat",
+    name: "Bodyweight Squat",
+    category: "squat",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["quads", "glutes"],
+    defaultSets: 2,
+    defaultReps: "10",
+    notes: "Warm-up staple. Feet about shoulder width, sit down and back, stand tall.",
+  },
+  {
+    id: "ex_forward_lunge",
+    name: "Forward Lunge",
+    category: "squat",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["quads", "glutes"],
+    defaultSets: 2,
+    defaultReps: "6",
+    notes: "Each side. Step forward, lower until both knees bend, push back to standing. Hold dumbbells to load it.",
+  },
+  {
+    id: "ex_single_leg_glute_bridge",
+    name: "Single-Leg Glute Bridge",
+    category: "hinge",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["glutes", "hamstrings"],
+    defaultSets: 2,
+    defaultReps: "8",
+    notes: "Each side. On your back, one foot planted. Drive the hips up, pause, lower slowly.",
+  },
+  {
+    id: "ex_db_goblet_squat",
+    name: "Dumbbell Goblet Squat",
+    category: "squat",
+    isAnchor: false,
+    equipment: ["dumbbell"],
+    muscles: ["quads", "glutes", "core"],
+    defaultSets: 3,
+    defaultReps: "10",
+    notes: "Hold one dumbbell upright against the chest. Elbows inside the knees at the bottom, torso tall.",
+  },
+  {
+    id: "ex_db_rdl",
+    name: "Dumbbell Romanian Deadlift",
+    category: "hinge",
+    isAnchor: false,
+    equipment: ["dumbbell"],
+    muscles: ["hamstrings", "glutes", "lower_back"],
+    defaultSets: 3,
+    defaultReps: "10",
+    notes: "Soft knees, push the hips back, dumbbells slide down the thighs. Stop when the hamstrings are tight, then stand.",
+  },
+  {
+    id: "ex_db_overhead_press",
+    name: "Dumbbell Overhead Press",
+    category: "press",
+    isAnchor: false,
+    equipment: ["dumbbell"],
+    muscles: ["shoulders", "triceps", "core"],
+    defaultSets: 3,
+    defaultReps: "8",
+    notes: "Standing or seated. Press straight up from shoulder height, ribs down, no leaning back.",
+  },
+  {
+    id: "ex_push_up",
+    name: "Push-Up",
+    category: "press",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["chest", "triceps", "shoulders", "core"],
+    defaultSets: 3,
+    defaultReps: "10",
+    notes: "Hands under shoulders, body in one line, chest to the floor. Knees down or hands on a bench makes it easier.",
+  },
+  {
+    id: "ex_close_grip_bench",
+    name: "Close-Grip Bench Press",
+    category: "press",
+    isAnchor: false,
+    equipment: ["barbell", "bench"],
+    muscles: ["triceps", "chest", "shoulders"],
+    defaultSets: 3,
+    defaultReps: "8",
+    notes: "Hands about shoulder width, elbows close to the ribs. Triceps do more of the work.",
+  },
+  {
+    id: "ex_chin_ups",
+    name: "Chin-Ups",
+    category: "pull",
+    isAnchor: false,
+    equipment: ["pull_up_bar"],
+    muscles: ["lats", "biceps"],
+    defaultSets: 3,
+    defaultReps: "5",
+    notes: "Palms facing you. Pull the chest to the bar, lower with control. Ring rows are a full swap.",
+  },
+  {
+    id: "ex_incline_reverse_fly",
+    name: "Incline Reverse Fly",
+    category: "pull",
+    isAnchor: false,
+    equipment: ["dumbbell", "bench"],
+    muscles: ["rear_delts", "upper_back"],
+    defaultSets: 3,
+    defaultReps: "12",
+    notes: "Chest on an incline bench. Raise the dumbbells out to the sides and squeeze the shoulder blades.",
+  },
+  {
+    id: "ex_kneeling_hip_flexor_stretch",
+    name: "Kneeling Hip-Flexor Stretch",
+    category: "mobility",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["hip_flexors"],
+    defaultSets: 2,
+    defaultReps: "30 sec",
+    notes: "Each side. Half-kneeling, tuck the tailbone, shift the hips forward until the front of the back hip stretches.",
+  },
+  {
+    id: "ex_kneeling_lat_stretch",
+    name: "Kneeling Lat Stretch (Bench)",
+    category: "mobility",
+    isAnchor: false,
+    equipment: ["bench"],
+    muscles: ["lats", "shoulders"],
+    defaultSets: 2,
+    defaultReps: "30 sec",
+    notes: "Kneel facing the bench with hands or elbows on it. Sink the chest toward the floor.",
+  },
+  {
+    id: "ex_overhead_triceps_stretch",
+    name: "Overhead Triceps Stretch",
+    category: "mobility",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["triceps", "shoulders"],
+    defaultSets: 2,
+    defaultReps: "30 sec",
+    notes: "Each side. Reach one hand down between the shoulder blades and ease the elbow back with the other hand.",
+  },
+  {
+    id: "ex_cobra",
+    name: "Cobra",
+    category: "mobility",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["spine", "abs"],
+    defaultSets: 2,
+    defaultReps: "30 sec",
+    notes: "Face down, hands under the shoulders. Press the chest up gently and keep the hips on the floor.",
+  },
+  {
+    id: "ex_warrior_one",
+    name: "Warrior I",
+    category: "mobility",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["hip_flexors", "calves", "shoulders"],
+    defaultSets: 2,
+    defaultReps: "30 sec",
+    notes: "Each side. Long stance, back heel down, front knee bent, arms overhead.",
+  },
+  {
+    id: "ex_iytw",
+    name: "Shoulder I-Y-T-W Series",
+    category: "mobility",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["upper_back", "shoulders"],
+    defaultSets: 1,
+    defaultReps: "5",
+    notes: "Raise the arms into the shape of each letter, slow and controlled, shoulder blades back and down. The form guide shows the setup.",
+  },
+  {
+    id: "ex_dirty_dog",
+    name: "Dirty Dog",
+    category: "mobility",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["glutes", "hips"],
+    defaultSets: 1,
+    defaultReps: "8",
+    notes: "Each side. On all fours, lift one bent knee out to the side and keep the hips level.",
+  },
+  {
+    id: "ex_neck_flexion_extension",
+    name: "Neck Flexion and Extension",
+    category: "mobility",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["neck"],
+    defaultSets: 1,
+    defaultReps: "5",
+    notes: "Slow nods: chin toward chest, then eyes toward the ceiling. Stay inside a comfortable range.",
+  },
+  {
+    id: "ex_lateral_neck_flexion",
+    name: "Lateral Neck Flexion",
+    category: "mobility",
+    isAnchor: false,
+    equipment: ["bodyweight"],
+    muscles: ["neck", "upper_traps"],
+    defaultSets: 1,
+    defaultReps: "5",
+    notes: "Each side. Ear toward shoulder, shoulders relaxed and level. Slow, comfortable range only.",
+  },
+
 ];
 
 // ─── Helper functions ─────────────────────────────────────────────────────────
@@ -878,7 +1046,7 @@ export const CATEGORIES = [
   { id: "press",    emoji: "💪",  label: "Press",    desc: "Bench · OHP · push accessories" },
   { id: "pull",     emoji: "🫷",  label: "Pull",     desc: "Rows · ring rows · pull-ups · curls" },
   { id: "core",     emoji: "🔥",  label: "Core",     desc: "Carries · anti-rotation · stability" },
-  { id: "mobility", emoji: "🌸",  label: "Mobility", desc: "PT · stretching · warm-up · cool-down" },
+  { id: "mobility", emoji: "🌸",  label: "Mobility", desc: "Stretching · warm-up · foot care" },
 ];
 
 // ─── Session templates ────────────────────────────────────────────────────────
@@ -931,3 +1099,70 @@ export const SESSION_TEMPLATES = [
     ],
   },
 ];
+
+// ─── Load type ────────────────────────────────────────────────────────────────
+// How an exercise is loaded, used for weight suggestions.
+//   barbell | landmine | dumbbell | kettlebell | body (bodyweight, bands, rings, sliders)
+
+export const loadTypeOf = (ex) => {
+  const eq = ex?.equipment || [];
+  if (eq.includes("landmine")) return "landmine";
+  if (eq.includes("barbell")) return "barbell";
+  if (eq.includes("dumbbell")) return "dumbbell";
+  if (eq.includes("kettlebell")) return "kettlebell";
+  return "body";
+};
+
+/** "reps" for counted reps, "time" for holds, "steps" for carries. */
+export const repUnitOf = (ex) => {
+  const r = String(ex?.defaultReps || "");
+  if (/sec|min/.test(r)) return "time";
+  if (/step/.test(r)) return "steps";
+  return "reps";
+};
+
+// ─── Form guides ──────────────────────────────────────────────────────────────
+// Links to the matching page in the ACE (American Council on Exercise) exercise
+// library. Only exercises with a confirmed matching page are listed. ACE's text
+// and photos are copyrighted, so the app links out and copies nothing.
+
+const ACE = "https://www.acefitness.org/resources/everyone/exercise-library";
+
+export const FORM_GUIDES = {
+  ex_back_squat:                  `${ACE}/11/back-squat/`,
+  ex_conventional_deadlift:       `${ACE}/6/deadlift/`,
+  ex_barbell_bench:               `${ACE}/5/chest-press/`,
+  ex_barbell_row:                 `${ACE}/12/bent-over-row/`,
+  ex_db_flat_press:               `${ACE}/19/chest-press/`,
+  ex_db_incline_press:            `${ACE}/25/incline-chest-press/`,
+  ex_bulgarian_split_squat:       `${ACE}/366/bulgarian-split-squat/`,
+  ex_goblet_squat:                `${ACE}/362/goblet-squat/`,
+  ex_db_goblet_squat:             `${ACE}/362/goblet-squat/`,
+  ex_farmer_carry:                `${ACE}/359/farmer-s-carry/`,
+  ex_step_up:                     `${ACE}/28/step-up/`,
+  ex_pull_ups:                    `${ACE}/191/pull-ups/`,
+  ex_hammer_curl:                 `${ACE}/10/hammer-curl/`,
+  ex_bird_dog:                    `${ACE}/14/bird-dog/`,
+  ex_cat_cow:                     `${ACE}/15/cat-cow/`,
+  ex_childs_pose:                 `${ACE}/227/childs-pose/`,
+  ex_down_dog:                    `${ACE}/18/downward-facing-dog/`,
+  ex_plank:                       `${ACE}/32/front-plank/`,
+  ex_lateral_lunge:               `${ACE}/364/lateral-lunge/`,
+  ex_bodyweight_squat:            `${ACE}/135/bodyweight-squat/`,
+  ex_forward_lunge:               `${ACE}/94/forward-lunge/`,
+  ex_single_leg_glute_bridge:     `${ACE}/145/glute-bridge-single-leg-progression/`,
+  ex_close_grip_bench:            `${ACE}/311/close-grip-bench-press/`,
+  ex_chin_ups:                    `${ACE}/190/chin-ups/`,
+  ex_incline_reverse_fly:         `${ACE}/34/incline-reverse-fly/`,
+  ex_kneeling_hip_flexor_stretch: `${ACE}/142/kneeling-hip-flexor-stretch/`,
+  ex_kneeling_lat_stretch:        `${ACE}/141/kneeling-lat-stretch-w-bench/`,
+  ex_overhead_triceps_stretch:    `${ACE}/174/overhead-triceps-stretch/`,
+  ex_cobra:                       `${ACE}/16/cobra/`,
+  ex_warrior_one:                 `${ACE}/228/warrior-i/`,
+  ex_iytw:                        `${ACE}/237/shoulder-stability-mobility-series-i-y-t-w-formations/`,
+  ex_dirty_dog:                   `${ACE}/109/dirty-dog/`,
+  ex_neck_flexion_extension:      `${ACE}/204/neck-flexion-and-extension/`,
+  ex_lateral_neck_flexion:        `${ACE}/202/lateral-neck-flexion/`,
+};
+
+export const ACE_LIBRARY_URL = `${ACE}/`;
