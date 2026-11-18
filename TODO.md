@@ -8,6 +8,15 @@ Ideas for later. Nothing here is in progress.
 - Warm-ups that change with the type of workout.
 - Suggested working weights, taken from your own logged sets.
 
+## Done in version 2.1
+
+- Tuesday is cardio (intervals, steady, tempo on the rower, or a brisk walk) followed by a short core circuit.
+- A Short, 30, or 45 picker for any single day on the Today tab, with easy cardio filling leftover minutes.
+- Mobility days lead with brisk cardio.
+- Outdoor options in Settings (hikes off by default, summer swims on).
+- Planned aerobic minutes on the Week tab, next to the 150-minute target.
+- CSV export as two files, Sessions and Sets, with a data dictionary in the README.
+
 ## Next
 
 - Kilograms as a unit option.

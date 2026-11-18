@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { ACTIVITIES } from "../engine/program.js";
+import { exportCsvs } from "../engine/export.js";
 import { fmtDate } from "../ui.jsx";
 import { isPreview } from "../platform.js";
 
@@ -32,33 +33,29 @@ export default function LogScreen({ sessions, extras, onReplace, onDelete }) {
     setMessage("Backup saved to your downloads.");
   }
 
-  function csvCell(v) {
-    const str = String(v ?? "");
-    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
-  }
-
-  async function exportCsv() {
-    const header = ["Date", "Day", "Format", "Duration (min)", "Exercises"];
-    const rows = sessions.map((s) => [
-      (s.date || "").slice(0, 10),
-      s.templateName || "",
-      s.kind === "lift" ? s.format?.name || "" : "",
-      s.durationMin ?? s.activity?.minutes ?? "",
-      (s.exercises || []).map((ex) => `${ex.name}: ${summarize(ex)}`).join("; "),
-    ]);
-    const csv = [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\r\n") + "\r\n";
-    const filename = `move-log-${new Date().toISOString().slice(0, 10)}.csv`;
-    const file = new File([csv], filename, { type: "text/csv" });
-    if (navigator.canShare?.({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: "Move log" }); setMessage("Log exported."); return; }
-      catch (err) { if (err.name === "AbortError") return; }
-    }
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  function download(text, filename, type) {
+    const url = URL.createObjectURL(new Blob([text], { type }));
     const a = document.createElement("a");
     a.href = url; a.download = filename;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    setMessage("Log exported.");
+  }
+
+  /** Two CSV files, Sessions and Sets (see the data dictionary in README.md). Shared together where the share sheet allows, otherwise both download. */
+  async function exportCsv() {
+    const stamp = new Date().toISOString().slice(0, 10);
+    const { sessions: sessionsCsv, sets: setsCsv } = exportCsvs(sessions);
+    const files = [
+      new File([sessionsCsv], `move-sessions-${stamp}.csv`, { type: "text/csv" }),
+      new File([setsCsv], `move-sets-${stamp}.csv`, { type: "text/csv" }),
+    ];
+    if (navigator.canShare?.({ files })) {
+      try { await navigator.share({ files, title: "Move log" }); setMessage("Sessions and Sets exported."); return; }
+      catch (err) { if (err.name === "AbortError") return; }
+    }
+    download(sessionsCsv, files[0].name, "text/csv");
+    download(setsCsv, files[1].name, "text/csv");
+    setMessage("Two files saved to your downloads: Sessions and Sets.");
   }
 
   async function readFile(e) {
