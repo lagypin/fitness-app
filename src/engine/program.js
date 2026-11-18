@@ -100,7 +100,57 @@ const MOVES = {
   triceps:         move("Overhead triceps stretch: 2 × 30 sec each side", "174/overhead-triceps-stretch"),
   cobra:           move("Cobra: 2 × 30 sec", "16/cobra"),
   warriorOne:      move("Warrior I: 2 × 30 sec each side", "228/warrior-i"),
+  chestStretch:    move("Standing chest stretch: 2 × 30 sec", "209/standing-chest-stretch"),
 };
+
+// ─── Lift-day warm-up and stretch, keyed by lift ──────────────────────────────
+// Each main or second lift gets one dynamic move before and one static stretch
+// after. Lists are ordered: the first entry is preferred, the rest are used
+// when an earlier lift in the same session already took it. Lifts that are not
+// listed (equipment fallbacks) use their movement pattern's entry.
+
+const LIFT_PREP = {
+  ex_back_squat:            { warm: [MOVES.bodyweightSquat, MOVES.forwardLunge], stretch: [MOVES.hipFlexor, MOVES.pigeon] },
+  ex_front_squat:           { warm: [MOVES.bodyweightSquat, MOVES.forwardLunge], stretch: [MOVES.hipFlexor, MOVES.pigeon] },
+  ex_barbell_bench:         { warm: [MOVES.iytw, MOVES.birdDog],                 stretch: [MOVES.chestStretch, MOVES.triceps] },
+  ex_barbell_ohp:           { warm: [MOVES.iytw, MOVES.birdDog],                 stretch: [MOVES.triceps, MOVES.chestStretch] },
+  ex_barbell_row:           { warm: [MOVES.birdDog, MOVES.iytw],                 stretch: [MOVES.latStretch, MOVES.latStretchFloor, MOVES.childsPose] },
+  ex_ring_rows:             { warm: [MOVES.birdDog, MOVES.iytw],                 stretch: [MOVES.latStretch, MOVES.latStretchFloor, MOVES.childsPose] },
+  ex_db_single_arm_row:     { warm: [MOVES.birdDog, MOVES.iytw],                 stretch: [MOVES.latStretch, MOVES.latStretchFloor, MOVES.childsPose] },
+  ex_pull_ups:              { warm: [MOVES.deadHang, MOVES.birdDog, MOVES.iytw], stretch: [MOVES.latStretch, MOVES.childsPose] },
+  ex_conventional_deadlift: { warm: [MOVES.gluteBridge, MOVES.forwardLunge],     stretch: [MOVES.downDog, MOVES.pigeon] },
+  ex_sumo_deadlift:         { warm: [MOVES.gluteBridge, MOVES.forwardLunge],     stretch: [MOVES.pigeon, MOVES.downDog] },
+};
+
+const PATTERN_PREP = {
+  squat: LIFT_PREP.ex_back_squat,
+  press: LIFT_PREP.ex_barbell_ohp,
+  pull:  LIFT_PREP.ex_barbell_row,
+  hinge: LIFT_PREP.ex_conventional_deadlift,
+};
+
+const prepFor = (id) => LIFT_PREP[id] || PATTERN_PREP[byId(id)?.category] || PATTERN_PREP.squat;
+
+/**
+ * One warm-up move and one stretch per lift, in lift order, with no repeats.
+ * Dead hangs need a pull-up bar; the bench lat stretch needs a bench.
+ */
+export function liftPrep(ids, gear) {
+  const adapt = (m) => {
+    if (m === MOVES.deadHang && !gear.includes("pull_up_bar")) return null;
+    if (m === MOVES.latStretch && !gear.includes("bench")) return MOVES.latStretchFloor;
+    return m;
+  };
+  const warm = [], stretch = [];
+  for (const id of ids) {
+    const prep = prepFor(id);
+    const w = prep.warm.map(adapt).find((m) => m && !warm.includes(m));
+    const st = prep.stretch.map(adapt).find((m) => m && !stretch.includes(m));
+    if (w) warm.push(w);
+    if (st) stretch.push(st);
+  }
+  return { warm, stretch };
+}
 
 // ─── Lifting days ─────────────────────────────────────────────────────────────
 // main / second: [block A, block B]. Accessories and finishers rotate by wave.
@@ -115,7 +165,6 @@ export const LIFT_DAYS = {
     ],
     heavyAccessory: 1, // hinge accessory: the pattern with the fewest sets otherwise
     finisher: ["ex_dead_bug", "ex_plank", "ex_hollow_body"],
-    prep: [MOVES.catCow, MOVES.bodyweightSquat, MOVES.iytw],
   },
   pull: {
     main:   ["ex_barbell_row", "ex_ring_rows"],
@@ -126,7 +175,6 @@ export const LIFT_DAYS = {
     ],
     heavyAccessory: 0, // squat accessory
     finisher: ["ex_side_plank", "ex_pallof_press", "ex_bird_dog"],
-    prep: [MOVES.catCow, MOVES.birdDog, MOVES.deadHang],
   },
   hinge: {
     main:   ["ex_conventional_deadlift", "ex_sumo_deadlift"],
@@ -137,7 +185,6 @@ export const LIFT_DAYS = {
     ],
     heavyAccessory: 0, // pull accessory
     finisher: ["ex_suitcase_carry", "ex_copenhagen_plank", "ex_overhead_carry"],
-    prep: [MOVES.catCow, MOVES.gluteBridge, MOVES.forwardLunge],
   },
 };
 
@@ -464,7 +511,7 @@ const WORK_SEC = { main: 45, second: 45, accessory: 35, finisher: 35, core: 35 }
 export function estimateMinutes(session) {
   let sec = 0;
   sec += (session.warmup?.length || 0) * (session.kind === "mobility" ? 80 : 55);
-  sec += (session.cooldown?.length || 0) * 80;
+  sec += (session.cooldown || []).filter((i) => !i.optional).length * 80;
   if (session.rampUp) sec += 150;
   const groups = new Map();
   for (const ex of session.exercises || []) {
@@ -517,13 +564,8 @@ function buildLift(date, programStart, plan, { short = false, settings }) {
   s.format = { id: format.id, name: format.name, tagline: format.tagline };
   s.blockNote = `Week ${c.weekInBlock} of 6 with these main lifts`;
   s.rampUp = true;
-  s.why = ["variety", "load", "failure", "rest"];
-
-  const prep = day.prep
-    .map((m) => (m === MOVES.deadHang && !gear.includes("pull_up_bar") ? MOVES.iytw : m))
-    .slice(0, short ? 1 : compact ? 2 : 3);
-  s.warmup = check([...prep, ...feet.before]);
-  s.cooldown = check(feet.after);
+  s.why = ["variety", "load", "failure", "rest", "warmup"];
+  s.cooldownTitle = "Stretch (optional)";
 
   const used = new Set();
   const take = (list, index, role, spec, group, opts) => {
@@ -535,10 +577,20 @@ function buildLift(date, programStart, plan, { short = false, settings }) {
 
   const main = take(day.main, c.blockIndex, "main", mainSpec, null, { anchor: true });
 
+  // The warm-up and stretch follow the lifts actually chosen. The ramp-up sets
+  // of the main lift are the real warm-up, so the checklist stays short.
+  const prepFrom = (lifts) => {
+    const { warm, stretch } = liftPrep(lifts.filter(Boolean).map((e) => e.exerciseId), gear);
+    s.warmup = check([...warm, ...feet.before]);
+    // The stretch is optional: it does not count toward the time estimate or progress.
+    s.cooldown = [...check(stretch).map((i) => ({ ...i, optional: true })), ...check(feet.after)];
+  };
+
   if (short) {
     s.short = true;
     s.templateName = `${plan.name} (short)`;
     s.exercises = [main && { ...main, sets: main.sets.slice(0, 3) }].filter(Boolean);
+    prepFrom([main]);
     s.estMinutes = estimateMinutes(s);
     return s;
   }
@@ -574,6 +626,9 @@ function buildLift(date, programStart, plan, { short = false, settings }) {
   }
 
   s.exercises = [main, ...rest].filter(Boolean);
+  // With no standalone second lift, the main lift's alternate moves fill in.
+  const second = rest.find((e) => e && e.role === "second");
+  prepFrom([main, second || main]);
   s.estMinutes = estimateMinutes(s);
   return s;
 }

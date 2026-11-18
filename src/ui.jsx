@@ -24,7 +24,7 @@ export function Checklist({ items, onToggle }) {
           {item.url && (
             <div className="ex-links" style={{ margin: "-4px 0 6px 34px" }}>
               <a href={item.url} target="_blank" rel="noreferrer">
-                How to do it: {item.text.split(":")[0]} (ACE)
+                {item.text.split(":")[0]}<span className="sr-only">, how to do it</span>
               </a>
             </div>
           )}

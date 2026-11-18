@@ -94,7 +94,7 @@ function ExerciseCard({ ex, index, grouped, barWeight, onUpdateSet, onToggleSet,
       {ex.notes && <p className="ex-notes">{ex.notes}</p>}
       {guide && (
         <p className="ex-links">
-          <a href={guide} target="_blank" rel="noreferrer">Form guide for {ex.name} (ACE)</a>
+          <a href={guide} target="_blank" rel="noreferrer">{ex.name}<span className="sr-only"> form guide</span></a>
         </p>
       )}
 
@@ -210,7 +210,7 @@ export default function SessionScreen({
 
   const totalSets = session.exercises.reduce((n, e) => n + e.sets.length, 0);
   const doneSets = session.exercises.reduce((n, e) => n + e.sets.filter((s) => s.done).length, 0);
-  const checks = [...session.warmup, ...(session.main || []), ...session.cooldown];
+  const checks = [...session.warmup, ...(session.main || []), ...session.cooldown].filter((c) => !c.optional);
   const total = totalSets + checks.length;
   const done = doneSets + checks.filter((c) => c.done).length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -291,8 +291,8 @@ export default function SessionScreen({
         {session.optional && <p className="muted" style={{ margin: "0 4px 12px" }}>{session.optional}</p>}
 
         {session.cooldown.length > 0 && (
-          <section className="card" aria-label="Cool-down">
-            <h3 className="section-head">Cool-down</h3>
+          <section className="card" aria-label={session.cooldownTitle || "Cool-down"}>
+            <h3 className="section-head">{session.cooldownTitle || "Cool-down"}</h3>
             <Checklist items={session.cooldown} onToggle={(i) => onToggleCheck("cooldown", i)} />
           </section>
         )}

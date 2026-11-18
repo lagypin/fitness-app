@@ -5,7 +5,7 @@ import { EXERCISES, byId, FORM_GUIDES } from "../src/exercises.js";
 import { addDays, fromKey, mondayOf, toKey, weekIndexFor } from "../src/engine/dates.js";
 import {
   buildSessionFor as build, clocks, DAY_PLAN, FORMATS, LIFT_DAYS, CORE_FORMATS, swapExercise, normalizeSession,
-  EQUIPMENT, DEFAULT_SETTINGS, canDo,
+  EQUIPMENT, DEFAULT_SETTINGS, canDo, liftPrep,
 } from "../src/engine/program.js";
 import { applySuggestions, suggestWeight, rampUpSets } from "../src/engine/progression.js";
 import { streak, weekSummary, weekRecap, aerobicMinutesOf, isStrengthEntry } from "../src/engine/stats.js";
@@ -122,8 +122,65 @@ test("mobility days hold static stretches for 60 seconds in total; lifting warm-
   for (const d of [0, 2, 4]) {
     const s = buildSessionFor(day(0, d), START);
     for (const item of s.warmup) assert.ok(!/stretch: |pose/i.test(item.text) || /ankle/i.test(item.text), item.text);
-    assert.equal(s.cooldown.length, 2);
+    assert.equal(s.cooldown.length, 4); // two lift stretches, then the two foot stretches
   }
+});
+
+// ─── lift-day warm-up and stretch ─────────────────────────────────────────────
+
+const STATIC = /stretch: |pose|downward|twist|cobra|warrior/i;
+const liftIds = () => Object.values(LIFT_DAYS).flatMap((d) => [...d.main, ...d.second]);
+
+test("lift-day warm-up and stretch follow the lifts: every main and second lift has its own pair", () => {
+  for (const id of liftIds()) {
+    const { warm, stretch } = liftPrep([id], ALL_GEAR);
+    assert.equal(warm.length, 1, id);
+    assert.equal(stretch.length, 1, id);
+    assert.ok(!STATIC.test(warm[0].text), `${id}: ${warm[0].text}`);
+    assert.match(stretch[0].text, /2 × 30 sec|60 sec/, stretch[0].text);
+  }
+});
+
+test("lift-day lists change with the block, never repeat a move, and skip Cat-cow and static holds", () => {
+  for (const [w, label] of [[0, "block A"], [6, "block B"]]) {
+    for (const d of [0, 2, 4]) {
+      for (const minutes of [30, 45]) {
+        const s = buildSessionFor(day(w, d), START, { settings: { ...ME, minutes, footCare: false } });
+        const warm = s.warmup.map((i) => i.text);
+        const stretch = s.cooldown.map((i) => i.text);
+        assert.equal(warm.length, 2, `${label} ${s.templateName} ${minutes}: ${warm}`);
+        assert.equal(stretch.length, 2, `${label} ${s.templateName} ${minutes}: ${stretch}`);
+        assert.equal(new Set(warm).size, warm.length);
+        assert.equal(new Set(stretch).size, stretch.length);
+        for (const t of warm) assert.ok(!/cat-cow/i.test(t) && !STATIC.test(t), t);
+        assert.equal(s.cooldownTitle, "Stretch (optional)");
+      }
+    }
+  }
+  for (const d of [0, 2, 4]) {
+    const a = buildSessionFor(day(0, d), START, { settings: { ...ME, footCare: false } });
+    const b = buildSessionFor(day(6, d), START, { settings: { ...ME, footCare: false } });
+    // Both squats warm up with a bodyweight squat and both presses with I-Y-T-W, so
+    // the Push and Hinge warm-ups match across blocks. The stretches always differ.
+    assert.notDeepEqual(a.cooldown.map((i) => i.text), b.cooldown.map((i) => i.text), a.templateName);
+    assert.notDeepEqual(allText(a), allText(b), a.templateName);
+  }
+});
+
+test("short lift sessions get one warm-up move and one stretch, with foot care after them", () => {
+  for (const d of [0, 2, 4]) {
+    const off = buildSessionFor(day(0, d), START, { short: true, settings: { ...ME, footCare: false } });
+    assert.equal(off.warmup.length, 1, off.templateName);
+    assert.equal(off.cooldown.length, 1, off.templateName);
+    const on = buildSessionFor(day(0, d), START, { short: true });
+    assert.equal(on.warmup.length, 3);
+    assert.equal(on.cooldown.length, 3);
+    assert.ok(!/calf|ankle|plantar/i.test(on.warmup[0].text));
+    assert.match(on.warmup[2].text, /calf raises/i);
+    assert.match(on.cooldown[1].text, /plantar/i);
+  }
+  // other day types keep the plain heading
+  for (const d of [1, 3, 5, 6]) assert.equal(buildSessionFor(day(0, d), START).cooldownTitle, undefined);
 });
 
 test("upper-back and shoulder accessories show up every week; neck moves are on the Back + shoulders day", () => {

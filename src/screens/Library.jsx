@@ -40,7 +40,7 @@ export default function LibraryScreen() {
           {ex.notes && <p className="lib-notes">{ex.notes}</p>}
           {FORM_GUIDES[ex.id] && (
             <p className="ex-links">
-              <a href={FORM_GUIDES[ex.id]} target="_blank" rel="noreferrer">Form guide for {ex.name} (ACE)</a>
+              <a href={FORM_GUIDES[ex.id]} target="_blank" rel="noreferrer">{ex.name}<span className="sr-only"> form guide</span></a>
             </p>
           )}
         </div>

@@ -181,6 +181,24 @@ export const SOURCES = {
     journal: "Sports Medicine",
     doi: "10.1007/s40279-019-01247-x",
   },
+  chaabene2019: {
+    cite: "Chaabene et al., 2019",
+    title: "Acute Effects of Static Stretching on Muscle Strength and Power: An Attempt to Clarify Previous Caveats",
+    journal: "Frontiers in Physiology",
+    doi: "10.3389/fphys.2019.01468",
+  },
+  vanhooren2018: {
+    cite: "Van Hooren and Peake, 2018",
+    title: "Do We Need a Cool-Down After Exercise? A Narrative Review of the Psychophysiological Effects and the Effects on Performance, Injuries and the Long-Term Adaptive Response",
+    journal: "Sports Medicine",
+    doi: "10.1007/s40279-018-0916-2",
+  },
+  afonso2021recovery: {
+    cite: "Afonso et al., 2021",
+    title: "The Effectiveness of Post-exercise Stretching in Short-Term and Delayed Recovery of Strength, Range of Motion and Delayed Onset Muscle Soreness: A Systematic Review and Meta-Analysis of Randomized Controlled Trials",
+    journal: "Frontiers in Physiology",
+    doi: "10.3389/fphys.2021.677581",
+  },
   milanovic2015: {
     cite: "Milanović et al., 2015",
     title: "Effectiveness of High-Intensity Interval Training (HIT) and Continuous Endurance Training for VO2max Improvements: A Systematic Review and Meta-Analysis of Controlled Trials",
@@ -264,11 +282,11 @@ export const PRINCIPLES = [
   },
   {
     id: "warmup",
-    title: "Short, dynamic warm-ups",
-    rule: "Warm-ups are two or three dynamic bodyweight moves and the daily foot work, followed by lighter ramp-up sets of the main lift. Long static holds are saved for mobility days. Lifting days end with the foot stretches and nothing else.",
-    evidence: "A review of time-efficient training advises limiting the warm-up to lighter sets of the exercise you are about to do. A systematic review found that static stretches held 60 seconds or more per muscle reduced performance right afterward by about 4.6%, against about 1.1% for shorter holds, while dynamic stretching gave small-to-moderate improvements. A 2025 expert consensus concluded that stretching does not speed up recovery after exercise.",
-    limits: "The warm-up moves are picked from the ACE exercise library. Which moves to pick was a judgment call, and no trial tested this set.",
-    sources: ["iversen2021", "behm2015", "warneke2025"],
+    title: "Warm up for the lifts you are about to do, stretch after if you like",
+    rule: "On lifting days the warm-up is one dynamic move for the main lift and one for the second lift, then lighter ramp-up sets of the main lift. Afterward there is an optional stretch for each of those lifts, 2 × 30 seconds. It is there for flexibility, not recovery, and a session can be finished without it.",
+    evidence: "A review of time-efficient training advises limiting the warm-up to lighter sets of the exercise you are about to do. Static holds of 60 seconds or less per muscle before lifting trim strength by only 1 to 2%, and longer holds by 4 to 7.5%, while dynamic moves give small-to-moderate improvements. A meta-analysis of 10 trials found that stretching after exercise did not reduce soreness or speed strength recovery compared with rest, and a narrative review found that active cool-downs do not improve next-day performance or prevent injuries. A 2025 expert consensus reached the same conclusion on recovery.",
+    limits: "Most of these studies are small and enrolled young, trained men. Which moves to pair with each lift was a judgment call, and no trial tested this set.",
+    sources: ["iversen2021", "chaabene2019", "behm2015", "afonso2021recovery", "vanhooren2018", "warneke2025"],
   },
   {
     id: "feet",
