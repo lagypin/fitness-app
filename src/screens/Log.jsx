@@ -32,6 +32,35 @@ export default function LogScreen({ sessions, extras, onReplace, onDelete }) {
     setMessage("Backup saved to your downloads.");
   }
 
+  function csvCell(v) {
+    const str = String(v ?? "");
+    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  }
+
+  async function exportCsv() {
+    const header = ["Date", "Day", "Format", "Duration (min)", "Exercises"];
+    const rows = sessions.map((s) => [
+      (s.date || "").slice(0, 10),
+      s.templateName || "",
+      s.kind === "lift" ? s.format?.name || "" : "",
+      s.durationMin ?? s.activity?.minutes ?? "",
+      (s.exercises || []).map((ex) => `${ex.name}: ${summarize(ex)}`).join("; "),
+    ]);
+    const csv = [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\r\n") + "\r\n";
+    const filename = `move-log-${new Date().toISOString().slice(0, 10)}.csv`;
+    const file = new File([csv], filename, { type: "text/csv" });
+    if (navigator.canShare?.({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: "Move log" }); setMessage("Log exported."); return; }
+      catch (err) { if (err.name === "AbortError") return; }
+    }
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setMessage("Log exported.");
+  }
+
   async function readFile(e) {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -67,6 +96,7 @@ export default function LogScreen({ sessions, extras, onReplace, onDelete }) {
         <>
           <div className="row" style={{ marginBottom: 12 }}>
             <button type="button" className="btn-secondary" onClick={exportBackup} disabled={!sessions.length}>Back up</button>
+            <button type="button" className="btn-secondary" onClick={exportCsv} disabled={!sessions.length}>Export CSV</button>
             <button type="button" className="btn-secondary" onClick={() => fileInput.current?.click()}>Restore</button>
             <input ref={fileInput} type="file" accept="application/json,.json" style={{ display: "none" }} onChange={readFile} aria-label="Backup file" />
           </div>

@@ -8,7 +8,7 @@
 //   wave   -> accessory exercises change every 3 weeks
 //   block  -> main lifts change every 6 weeks
 //
-// Weekly split: Mon Push · Tue Core · Wed Pull · Thu Mobility · Fri Hinge ·
+// Weekly split: Mon Push · Tue Cardio + core · Wed Pull · Thu Mobility · Fri Hinge ·
 // Sat Mobility · Sun Surprise.
 //
 // Settings (see DEFAULT_SETTINGS) adapt the plan to the person: minutes per
@@ -22,7 +22,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 export const DAY_PLAN = [
   { key: "push",     name: "Push",     kind: "lift",     emoji: "💪", blurb: "Squat + press" },
-  { key: "core",     name: "Core",     kind: "core",     emoji: "🔥", blurb: "Trunk + carries" },
+  { key: "core",     name: "Cardio + core", kind: "core", emoji: "🔥", blurb: "Cardio + trunk work" },
   { key: "pull",     name: "Pull",     kind: "lift",     emoji: "🧗", blurb: "Rows + pull-ups" },
   { key: "mobility", name: "Mobility", kind: "mobility", emoji: "🌸", blurb: "Flow + easy movement" },
   { key: "hinge",    name: "Hinge",    kind: "lift",     emoji: "⚡", blurb: "Deadlift + press" },

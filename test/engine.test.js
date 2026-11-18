@@ -35,7 +35,7 @@ test("dates: week index and Monday math", () => {
 
 test("the weekly split matches the plan", () => {
   assert.deepEqual(DAY_PLAN.map((d) => d.name),
-    ["Push", "Core", "Pull", "Mobility", "Hinge", "Mobility", "Surprise"]);
+    ["Push", "Cardio + core", "Pull", "Mobility", "Hinge", "Mobility", "Surprise"]);
 });
 
 test("every day for 18 weeks builds, in winter and summer", () => {
