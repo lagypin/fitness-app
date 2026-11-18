@@ -27,7 +27,7 @@ export default function LibraryScreen() {
       </div>
       <p className="muted" role="status" style={{ marginBottom: 10 }}>
         {filtered.length} exercises. Form guides link to the{" "}
-        <a href={ACE_LIBRARY_URL} target="_blank" rel="noreferrer">ACE exercise library (opens in a new tab)</a>.
+        <a href={ACE_LIBRARY_URL} target="_blank" rel="noreferrer">ACE exercise library</a>.
       </p>
       {filtered.map((ex) => (
         <div key={ex.id} className="card">
@@ -40,7 +40,7 @@ export default function LibraryScreen() {
           {ex.notes && <p className="lib-notes">{ex.notes}</p>}
           {FORM_GUIDES[ex.id] && (
             <p className="ex-links">
-              <a href={FORM_GUIDES[ex.id]} target="_blank" rel="noreferrer">Form guide for {ex.name} (ACE, opens in a new tab)</a>
+              <a href={FORM_GUIDES[ex.id]} target="_blank" rel="noreferrer">Form guide for {ex.name} (ACE)</a>
             </p>
           )}
         </div>

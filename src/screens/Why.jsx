@@ -13,7 +13,7 @@ export default function WhyScreen() {
         <p className="plan-meta">
           This is general fitness guidance and does not replace advice from a clinician who knows you.
           Exercise form guides link to the{" "}
-          <a href={ACE_LIBRARY_URL} target="_blank" rel="noreferrer">ACE exercise library (opens in a new tab)</a>.
+          <a href={ACE_LIBRARY_URL} target="_blank" rel="noreferrer">ACE exercise library</a>.
         </p>
       </div>
 
@@ -34,7 +34,7 @@ export default function WhyScreen() {
                   return (
                     <li key={key}>
                       <a href={doiUrl(src.doi)} target="_blank" rel="noreferrer">
-                        {src.cite}. {src.title}. {src.journal}. (opens in a new tab)
+                        {src.cite}. {src.title}. {src.journal}.
                       </a>
                     </li>
                   );

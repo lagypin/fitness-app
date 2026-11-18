@@ -94,7 +94,7 @@ function ExerciseCard({ ex, index, grouped, barWeight, onUpdateSet, onToggleSet,
       {ex.notes && <p className="ex-notes">{ex.notes}</p>}
       {guide && (
         <p className="ex-links">
-          <a href={guide} target="_blank" rel="noreferrer">Form guide for {ex.name} (ACE, opens in a new tab)</a>
+          <a href={guide} target="_blank" rel="noreferrer">Form guide for {ex.name} (ACE)</a>
         </p>
       )}
 
@@ -170,6 +170,14 @@ export default function SessionScreen({
       navigator.vibrate?.(200);
     }
   }, [timer, remaining]);
+
+  // Keep the screen on while a session is active.
+  useEffect(() => {
+    if (!("wakeLock" in navigator)) return undefined;
+    let lock = null;
+    navigator.wakeLock.request("screen").then((l) => { lock = l; }).catch(() => {});
+    return () => { lock?.release(); };
+  }, []);
 
   // Consecutive exercises that share a group render inside one dashed box.
   const blocks = useMemo(() => {
