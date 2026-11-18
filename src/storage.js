@@ -7,6 +7,7 @@ export const KEYS = {
   settings: "move_settings",       // minutes per day, equipment, bar weight, foot care
   swaps: "move_swaps",             // standing swaps: { originalExerciseId: replacementId }
   rerolls: "move_rerolls",         // Sunday surprise rerolls: { dayKey: count }
+  lengths: "move_lengths",         // per-day length picks: { dayKey: "short" | 30 | 45 }
 };
 
 export const LS = {

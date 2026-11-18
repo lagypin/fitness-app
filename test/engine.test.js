@@ -5,7 +5,7 @@ import { EXERCISES, byId, FORM_GUIDES } from "../src/exercises.js";
 import { addDays, fromKey, mondayOf, toKey, weekIndexFor } from "../src/engine/dates.js";
 import {
   buildSessionFor as build, clocks, DAY_PLAN, FORMATS, LIFT_DAYS, CORE_FORMATS, swapExercise, normalizeSession,
-  EQUIPMENT, DEFAULT_SETTINGS, canDo, liftPrep,
+  EQUIPMENT, DEFAULT_SETTINGS, canDo, liftPrep, activityMenu, plannedAerobicMinutes, CARDIO_TYPES, LENGTHS,
 } from "../src/engine/program.js";
 import { applySuggestions, suggestWeight, rampUpSets } from "../src/engine/progression.js";
 import { streak, weekSummary, weekRecap, aerobicMinutesOf, isStrengthEntry } from "../src/engine/stats.js";
@@ -22,7 +22,7 @@ const monday = fromKey(START);
 const day = (week, dow) => addDays(monday, week * 7 + dow);
 
 const allText = (s) =>
-  [...(s.warmup || []), ...(s.cooldown || []), ...(s.main || [])].map((i) => i.text).join(" | ");
+  [...(s.cardio || []), ...(s.warmup || []), ...(s.cooldown || []), ...(s.main || [])].map((i) => i.text).join(" | ");
 
 test("dates: week index and Monday math", () => {
   assert.equal(toKey(mondayOf(fromKey("2026-11-11"))), "2026-11-09");
@@ -219,7 +219,7 @@ test("lifting sessions fit the minutes setting; short versions fit in 20", () =>
         assert.equal(short.exercises.length, 1);
       }
       const core = buildSessionFor(day(w, 1), START, { settings });
-      assert.ok(core.estMinutes <= 30, `core ${core.format.id}: ${core.estMinutes}`);
+      assert.ok(core.estMinutes + core.activity.minutes <= minutes, `core ${core.format.id}: ${core.estMinutes} + ${core.activity.minutes}`);
       for (const d of [3, 5]) {
         const m = buildSessionFor(day(w, d), START, { settings });
         if (m.format.id !== "class") assert.ok(m.estMinutes + m.activity.minutes <= minutes + 5, `mobility: ${m.estMinutes}+${m.activity.minutes}`);
