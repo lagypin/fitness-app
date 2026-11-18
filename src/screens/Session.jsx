@@ -210,7 +210,17 @@ export default function SessionScreen({
 
   const totalSets = session.exercises.reduce((n, e) => n + e.sets.length, 0);
   const doneSets = session.exercises.reduce((n, e) => n + e.sets.filter((s) => s.done).length, 0);
-  const checks = [...session.warmup, ...(session.main || []), ...session.cooldown].filter((c) => !c.optional);
+  const checks = [...(session.cardio || []), ...session.warmup, ...(session.main || []), ...session.cooldown].filter((c) => !c.optional);
+  const activityCard = (heading) => (
+    <section className="card" aria-label="Movement">
+      <h3 className="section-head">{heading}</h3>
+      <p style={{ fontWeight: 800, marginBottom: 10 }}>
+        <span aria-hidden="true">{ACTIVITIES[session.activity.type].emoji} </span>
+        {ACTIVITIES[session.activity.type].label}, {session.activity.minutes} min
+      </p>
+      <ActivityPicker activity={session.activity} activities={ACTIVITIES} onChange={onActivity} />
+    </section>
+  );
   const total = totalSets + checks.length;
   const done = doneSets + checks.filter((c) => c.done).length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -243,6 +253,14 @@ export default function SessionScreen({
             <p className="plan-meta"><span aria-hidden="true">⌚ </span>Tracking on a watch? Start: {watchWorkoutFor(session)}</p>
           </div>
         )}
+
+        {session.cardio?.length > 0 && (
+          <section className="card" aria-label={session.cardioTitle || "Cardio"}>
+            <h3 className="section-head">{session.cardioTitle || "Cardio"}</h3>
+            <Checklist items={session.cardio} onToggle={(i) => onToggleCheck("cardio", i)} />
+          </section>
+        )}
+        {session.cardio?.length > 0 && session.activity && activityCard("Log the cardio")}
 
         {session.warmup.length > 0 && (
           <section className="card" aria-label={session.warmupTitle || "Warm-up"}>
@@ -277,18 +295,9 @@ export default function SessionScreen({
           )
         )}
 
-        {session.activity && (
-          <section className="card" aria-label="Movement">
-            <h3 className="section-head">{session.exercises.length || session.main ? "Log it" : "Then move"}</h3>
-            <p style={{ fontWeight: 800, marginBottom: 10 }}>
-              <span aria-hidden="true">{ACTIVITIES[session.activity.type].emoji} </span>
-              {ACTIVITIES[session.activity.type].label}, {session.activity.minutes} min
-            </p>
-            <ActivityPicker activity={session.activity} activities={ACTIVITIES} onChange={onActivity} />
-          </section>
-        )}
-
         {session.optional && <p className="muted" style={{ margin: "0 4px 12px" }}>{session.optional}</p>}
+
+        {session.activity && !session.cardio?.length && activityCard(session.exercises.length || session.main ? "Log it" : "Then move")}
 
         {session.cooldown.length > 0 && (
           <section className="card" aria-label={session.cooldownTitle || "Cool-down"}>

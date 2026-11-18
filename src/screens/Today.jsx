@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { ACTIVITIES, DAY_PLAN } from "../engine/program.js";
+import { ACTIVITIES, DAY_PLAN, LENGTHS, activityMenu } from "../engine/program.js";
 import { addDays, dayIndex, DAY_NAMES, fromKey, mondayOf, toKey } from "../engine/dates.js";
 import { principleById } from "../engine/evidence.js";
 import { AEROBIC_TARGET_MIN, STRENGTH_TARGET_DAYS } from "../engine/stats.js";
 import { ActivityPicker, Meter, Modal } from "../ui.jsx";
+
+const LENGTH_LABEL = { short: "Short", 30: "30 min", 45: "45 min" };
 
 function dose(ex) {
   const base = ex.repsLabel === "max minus 2" ? `${ex.sets.length} × max` : `${ex.sets.length} × ${ex.repsLabel}`;
@@ -13,6 +15,18 @@ function dose(ex) {
 function PlanList({ plan }) {
   const rows = [];
   let lastGroup = null;
+  if (plan.cardio?.length) {
+    const a = ACTIVITIES[plan.activity?.type];
+    rows.push(<li key="cg" className="pl-group">{plan.cardioTitle || "Cardio"}</li>);
+    plan.cardio.forEach((item, i) => rows.push(
+      <li key={`c${i}`}>
+        <span className="pl-name">{item.text}</span>
+        {i === 0 && a && <span className="pl-dose">{plan.activity.minutes} min</span>}
+      </li>
+    ));
+    if (plan.exercises.length) rows.push(<li key="coreg" className="pl-group">{plan.exercises[0].group || "Core"}</li>);
+    lastGroup = plan.exercises[0]?.group || null;
+  }
   plan.exercises.forEach((ex, i) => {
     if (ex.group && ex.group !== lastGroup) rows.push(<li key={`g${i}`} className="pl-group">{ex.group}</li>);
     lastGroup = ex.group || null;
@@ -27,29 +41,29 @@ function PlanList({ plan }) {
   if (plan.kind === "mobility" && !plan.short) {
     rows.push(<li key="flow"><span className="pl-name">{plan.warmupTitle}</span><span className="pl-dose">about {plan.estMinutes} min</span></li>);
   }
-  if (plan.activity && !plan.main) {
+  if (plan.activity && !plan.main && !plan.cardio?.length) {
     const a = ACTIVITIES[plan.activity.type];
     rows.push(<li key="act"><span className="pl-name"><span aria-hidden="true">{a.emoji} </span>{a.label}</span><span className="pl-dose">{plan.activity.minutes} min</span></li>);
   }
   return <ul className="plan-list">{rows}</ul>;
 }
 
-function QuickLog({ onSave, onClose, initialType }) {
-  const [activity, setActivity] = useState({ type: initialType, minutes: ACTIVITIES[initialType].minutes, hard: false, options: Object.keys(ACTIVITIES) });
+function QuickLog({ onSave, onClose, initialType, activities }) {
+  const [activity, setActivity] = useState({ type: initialType, minutes: activities[initialType].minutes, hard: false, options: Object.keys(activities) });
   return (
     <Modal title="Log movement" onClose={onClose}>
-      <ActivityPicker activity={activity} activities={ACTIVITIES} onChange={(patch) => setActivity({ ...activity, ...patch })} />
+      <ActivityPicker activity={activity} activities={activities} onChange={(patch) => setActivity({ ...activity, ...patch })} />
       <button type="button" className="btn-primary" style={{ marginTop: 16 }} disabled={!activity.minutes}
         onClick={() => onSave({ type: activity.type, minutes: activity.minutes, hard: activity.hard })}>
-        Save {ACTIVITIES[activity.type].label.toLowerCase()}, {activity.minutes} min
+        Save {activities[activity.type].label.toLowerCase()}, {activity.minutes} min
       </button>
     </Modal>
   );
 }
 
 export default function TodayScreen({
-  today, selectedKey, onSelect, plan, shortMinutes, planDone, week, doneKeys, activeSession,
-  onResume, onStart, onStartShort, onReroll, onQuickLog, onOpenWhy, status,
+  today, selectedKey, onSelect, plan, length, onLength, settings, planDone, week, doneKeys, activeSession,
+  onResume, onStart, onReroll, onQuickLog, onOpenWhy, status,
 }) {
   const [showWhy, setShowWhy] = useState(false);
   const [quick, setQuick] = useState(null);
@@ -59,6 +73,7 @@ export default function TodayScreen({
   const isToday = selectedKey === todayKey;
   const dayPlan = DAY_PLAN[dayIndex(selected)];
   const total = plan.estMinutes + (plan.activity?.minutes || 0);
+  const activities = activityMenu(settings);
 
   return (
     <>
@@ -106,6 +121,15 @@ export default function TodayScreen({
         </p>
         {plan.blockNote && <p className="plan-meta">{plan.blockNote}</p>}
 
+        <h3 className="label" id="length-pick" style={{ marginTop: 10 }}>Length for this day</h3>
+        <div className="chips" role="group" aria-labelledby="length-pick" style={{ marginBottom: 8 }}>
+          {LENGTHS.map((l) => (
+            <button key={l} type="button" className="chip" aria-pressed={length === l} onClick={() => onLength(l)}>
+              {LENGTH_LABEL[l]}{l === settings.minutes ? " (default)" : ""}
+            </button>
+          ))}
+        </div>
+
         <PlanList plan={plan} />
 
         {activeSession ? (
@@ -117,9 +141,6 @@ export default function TodayScreen({
           <div className="stack">
             <button type="button" className="btn-primary" onClick={onStart}>
               {planDone ? "Do it again" : isToday ? "Start" : `Do ${dayPlan.name} today`}
-            </button>
-            <button type="button" className="btn-secondary" onClick={onStartShort}>
-              Short version, about {shortMinutes} min
             </button>
             {plan.kind === "surprise" && (
               <button type="button" className="btn-secondary" onClick={onReroll}>Deal me a different one</button>
@@ -143,7 +164,7 @@ export default function TodayScreen({
 
       <h2 className="label" id="quick-log">Log other movement</h2>
       <div className="chips" role="group" aria-labelledby="quick-log">
-        {Object.entries(ACTIVITIES).map(([type, a]) => (
+        {Object.entries(activities).map(([type, a]) => (
           <button key={type} type="button" className="chip" onClick={() => setQuick(type)}>
             <span aria-hidden="true">{a.emoji} </span>{a.label}
           </button>
@@ -158,7 +179,7 @@ export default function TodayScreen({
       </div>
 
       {quick && (
-        <QuickLog initialType={quick} onClose={() => setQuick(null)} onSave={(a) => { onQuickLog(a); setQuick(null); }} />
+        <QuickLog initialType={quick} activities={activities} onClose={() => setQuick(null)} onSave={(a) => { onQuickLog(a); setQuick(null); }} />
       )}
     </>
   );

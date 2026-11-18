@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { EQUIPMENT } from "../engine/program.js";
 
-/** First-run setup and the Settings form are the same four questions. */
+/** First-run setup and the Settings form are the same questions: minutes, equipment, bar weight, outdoor options, foot care. */
 export default function SettingsForm({ settings, firstRun = false, onSave }) {
   const [draft, setDraft] = useState(settings);
   const has = (id) => draft.equipment.includes(id);
@@ -13,7 +13,7 @@ export default function SettingsForm({ settings, firstRun = false, onSave }) {
       {firstRun && (
         <div className="card">
           <h2 className="plan-title">Set up your plan</h2>
-          <p className="plan-meta">Four quick questions. You can change any of them later on the Week tab.</p>
+          <p className="plan-meta">A few quick questions. You can change any of them later on the Week tab.</p>
         </div>
       )}
 
@@ -57,6 +57,19 @@ export default function SettingsForm({ settings, firstRun = false, onSave }) {
           </div>
         </div>
       )}
+
+      <div className="card">
+        <h3 className="section-head" id="set-outdoor">Outdoor options</h3>
+        <p className="muted" style={{ marginBottom: 10 }}>Walks are always in the plan. Switch these on to have the app suggest them too.</p>
+        <div className="chips" role="group" aria-labelledby="set-outdoor">
+          <button type="button" className="chip" aria-pressed={!!draft.hikes} onClick={() => setDraft({ ...draft, hikes: !draft.hikes })}>
+            {draft.hikes ? "✓ " : ""}Hikes
+          </button>
+          <button type="button" className="chip" aria-pressed={!!draft.swims} onClick={() => setDraft({ ...draft, swims: !draft.swims })}>
+            {draft.swims ? "✓ " : ""}Summer swims
+          </button>
+        </div>
+      </div>
 
       <div className="card">
         <h3 className="section-head" id="set-feet">Foot care add-on</h3>

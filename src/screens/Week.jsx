@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { byId } from "../exercises.js";
-import { clocks, FORMATS } from "../engine/program.js";
+import { clocks, FORMATS, plannedAerobicMinutes } from "../engine/program.js";
 import { addDays, DAY_NAMES, mondayOf, toKey } from "../engine/dates.js";
 import {
   AEROBIC_TARGET_MIN, STRENGTH_TARGET_DAYS, SETS_MINIMUM, SETS_GOAL, PATTERNS, weekSummary, weekRecap,
@@ -10,7 +10,9 @@ import SettingsForm from "./Settings.jsx";
 
 const short = { month: "short", day: "numeric" };
 
-export default function WeekScreen({ today, sessions, programStart, streakCount, swaps, onRemoveSwap, settings, onSaveSettings }) {
+export default function WeekScreen({
+  today, sessions, programStart, streakCount, swaps, onRemoveSwap, settings, onSaveSettings, lengths = {}, rerolls = {},
+}) {
   const [offset, setOffset] = useState(0);
   const [shareStatus, setShareStatus] = useState("");
   const [recapText, setRecapText] = useState("");
@@ -18,6 +20,7 @@ export default function WeekScreen({ today, sessions, programStart, streakCount,
   const monday = addDays(mondayOf(today), offset * 7);
   const week = weekSummary(sessions, monday);
   const c = clocks(monday, programStart);
+  const planned = plannedAerobicMinutes(monday, programStart, settings, { lengths, rerolls });
   const swapList = Object.entries(swaps).filter(([from, to]) => byId(from) && byId(to));
 
   async function share() {
@@ -66,7 +69,10 @@ export default function WeekScreen({ today, sessions, programStart, streakCount,
           {FORMATS[c.formatIndex].name} week. Week {c.weekInBlock} of 6 with the current main lifts. Streak: {streakCount} {streakCount === 1 ? "day" : "days"}.
         </p>
         <Meter label="Aerobic minutes" value={week.aerobicMinutes} target={AEROBIC_TARGET_MIN} unit=" min"
-          note="WHO target for adults: 150 moderate minutes a week. Hard minutes count double." />
+          note={`WHO target for adults: ${AEROBIC_TARGET_MIN} moderate minutes a week. Hard minutes count double.`} />
+        <p className="meter-note" style={{ marginTop: -4 }}>
+          Planned in this week's sessions: <strong>{planned} min</strong> of the {AEROBIC_TARGET_MIN}. The walks you log cover the rest.
+        </p>
         <Meter label="Strength days" value={week.strengthDays} target={STRENGTH_TARGET_DAYS}
           note="WHO target: muscle strengthening on 2 or more days a week." />
         <Meter label="Days moved" value={week.activeDays} target={7} note="Any logged movement counts, including a 10-minute walk." />
@@ -124,7 +130,7 @@ export default function WeekScreen({ today, sessions, programStart, streakCount,
       <div className="card">
         <p style={{ fontSize: 14 }}>
           {settings.minutes} minutes a day · {settings.equipment.length} kinds of equipment
-          {settings.equipment.includes("barbell") ? ` · ${settings.barWeight} lb bar` : ""} · foot care {settings.footCare ? "on" : "off"}
+          {settings.equipment.includes("barbell") ? ` · ${settings.barWeight} lb bar` : ""} · hikes {settings.hikes ? "on" : "off"} · summer swims {settings.swims ? "on" : "off"} · foot care {settings.footCare ? "on" : "off"}
         </p>
         <button type="button" className="btn-secondary" style={{ marginTop: 10 }} onClick={() => setEditing(true)}>Change settings</button>
       </div>

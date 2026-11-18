@@ -35,6 +35,7 @@ export default function App() {
   const [settings, setSettings] = useState(() => withDefaults(LS.get(KEYS.settings)));
   const [swaps, setSwaps] = useState(() => LS.get(KEYS.swaps, {}));
   const [rerolls, setRerolls] = useState(() => LS.get(KEYS.rerolls, {}));
+  const [lengths, setLengths] = useState(() => LS.get(KEYS.lengths, {}));
   const [programStart] = useState(initialProgramStart);
   const [status, setStatus] = useState("");
 
@@ -56,8 +57,11 @@ export default function App() {
   const saveActive = (next) => { setActive(next); LS.set(KEYS.active, next); };
   const updateActive = (fn) => setActive((prev) => { const next = fn(prev); LS.set(KEYS.active, next); return next; });
 
-  function planFor(dayKey, { short = false } = {}) {
-    const base = buildSessionFor(fromKey(dayKey), programStart, { short, reroll: rerolls[dayKey] || 0, settings });
+  // The length picked for a day on the Today tab, or the Settings default.
+  const lengthFor = (dayKey) => lengths[dayKey] ?? settings.minutes;
+
+  function planFor(dayKey) {
+    const base = buildSessionFor(fromKey(dayKey), programStart, { length: lengthFor(dayKey), reroll: rerolls[dayKey] || 0, settings });
     const ids = new Set(base.exercises.map((e) => e.exerciseId));
     const swapped = {
       ...base,
@@ -69,8 +73,7 @@ export default function App() {
     return applySuggestions(swapped, sessions, { barWeight: settings.barWeight });
   }
 
-  const plan = useMemo(() => planFor(selectedKey), [selectedKey, sessions, swaps, rerolls, programStart, settings]);
-  const shortPlan = useMemo(() => planFor(selectedKey, { short: true }), [selectedKey, sessions, swaps, rerolls, programStart, settings]);
+  const plan = useMemo(() => planFor(selectedKey), [selectedKey, sessions, swaps, rerolls, lengths, programStart, settings]);
   const week = useMemo(() => weekSummary(sessions, mondayOf(today)), [sessions, today]);
   const streakCount = useMemo(() => streak(sessions, today), [sessions, today]);
   const doneKeys = useMemo(() => new Set(sessions.map(entryDayKey)), [sessions]);
@@ -86,9 +89,9 @@ export default function App() {
   function complete() {
     const elapsed = Math.round((Date.now() - (active.startedAt || Date.now())) / 60000);
     const lifted = active.exercises.length > 0;
-    const durationMin = lifted
-      ? (elapsed >= 5 && elapsed <= 150 ? elapsed : active.estMinutes)
-      : active.estMinutes + (active.activity?.minutes || 0);
+    const planned = active.estMinutes + (active.activity?.minutes || 0);
+    // A lifting session times itself; anything else (and a lift logged much later) uses the planned length.
+    const durationMin = lifted && elapsed >= 5 && elapsed <= 150 ? elapsed : planned;
     saveSessions([...sessions, { ...active, completed: true, completedAt: new Date().toISOString(), durationMin }]);
     saveActive(null);
     setShowSession(false);
@@ -136,6 +139,12 @@ export default function App() {
   function reroll() {
     const next = { ...rerolls, [selectedKey]: (rerolls[selectedKey] || 0) + 1 };
     setRerolls(next); LS.set(KEYS.rerolls, next);
+  }
+
+  function setLength(length) {
+    const next = { ...lengths };
+    if (length === settings.minutes) delete next[selectedKey]; else next[selectedKey] = length;
+    setLengths(next); LS.set(KEYS.lengths, next);
   }
 
   const firstRun = !settings.setupDone;
@@ -204,16 +213,17 @@ export default function App() {
         {!firstRun && tab === "today" && (
           <TodayScreen
             today={today} selectedKey={selectedKey} onSelect={setSelectedKey}
-            plan={plan} shortMinutes={shortPlan.estMinutes + (shortPlan.activity?.minutes || 0)}
+            plan={plan} length={lengthFor(selectedKey)} onLength={setLength} settings={settings}
             planDone={planDone} week={week} doneKeys={doneKeys} status={status}
             activeSession={active} onResume={() => setShowSession(true)}
-            onStart={() => start(plan)} onStartShort={() => start(shortPlan)}
+            onStart={() => start(plan)}
             onReroll={reroll} onQuickLog={quickLog} onOpenWhy={() => setTab("why")}
           />
         )}
         {!firstRun && tab === "week" && (
           <WeekScreen today={today} sessions={sessions} programStart={programStart} streakCount={streakCount}
-            swaps={swaps} onRemoveSwap={removeSwap} settings={settings} onSaveSettings={saveSettings} />
+            swaps={swaps} onRemoveSwap={removeSwap} settings={settings} onSaveSettings={saveSettings}
+            lengths={lengths} rerolls={rerolls} />
         )}
         {!firstRun && tab === "log" && (
           <LogScreen sessions={sessions} extras={{ programStart, swaps, settings }}
