@@ -130,6 +130,7 @@ input[type=number] { -moz-appearance: textfield; }
 .session-exit-btn { min-height: 44px; background: var(--hot-deep); border: 1.5px solid rgba(255,255,255,0.5); border-radius: 10px; color: var(--on-hot); font-size: 14px; font-weight: 700; padding: 8px 14px; flex-shrink: 0; }
 .progress-bar-bg { margin-top: 10px; height: 6px; background: var(--hot-deep); border-radius: 3px; }
 .progress-bar-fill { height: 100%; background: #fff; border-radius: 3px; transition: width 0.3s ease; }
+.keep-awake { font-size: 12px; font-weight: 700; color: var(--text-dim); margin: -4px 4px 10px; min-height: 16px; }
 .session-body { flex: 1; overflow-y: auto; padding: 14px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); -webkit-overflow-scrolling: touch; }
 .session-footer { padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: var(--bg); border-top: 1.5px solid var(--border); flex-shrink: 0; }
 
@@ -177,6 +178,8 @@ input[type=number] { -moz-appearance: textfield; }
 .timer-time { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .timer-label { font-size: 13px; color: #f3dfe6; }
 .timer .btn-small { border-color: #fff; background: transparent; color: #fff; }
+.timer.timer-done { background: var(--green); }
+.timer.timer-done .timer-label { color: #fff; }
 
 .minutes-input { width: 84px; min-height: 46px; border: 1.5px solid var(--control); border-radius: 10px; font-size: 16px; font-weight: 700; text-align: center; color: var(--text); background: #fff; }
 

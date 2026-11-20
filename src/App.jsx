@@ -6,6 +6,7 @@ import { applySuggestions } from "./engine/progression.js";
 import { daysMovedThisWeek, weekSummary } from "./engine/stats.js";
 import { entryDayKey, fromKey, mondayOf, toKey } from "./engine/dates.js";
 import { KEYS, LS, dropRetiredKeys, uid } from "./storage.js";
+import { keepAwake, release as releaseWakeLock } from "./wakeLock.js";
 import TodayScreen from "./screens/Today.jsx";
 import SessionScreen from "./screens/Session.jsx";
 import WeekScreen from "./screens/Week.jsx";
@@ -80,7 +81,9 @@ export default function App() {
   const doneKeys = useMemo(() => new Set(sessions.map(entryDayKey)), [sessions]);
   const planDone = sessions.some((s) => s.planDayKey === selectedKey);
 
+  // keepAwake() runs first, inside the tap, so the browser counts it as user activation.
   function start(p) {
+    keepAwake();
     const now = new Date();
     saveActive({ ...p, id: uid(), planDayKey: p.dayKey, dayKey: toKey(now), date: now.toISOString(), startedAt: now.getTime() });
     say(null);
@@ -88,7 +91,13 @@ export default function App() {
   }
 
   function resume() {
+    keepAwake();
     setShowSession(true);
+  }
+
+  function pause() {
+    releaseWakeLock();
+    setShowSession(false);
   }
 
   function complete() {
@@ -99,6 +108,7 @@ export default function App() {
     const durationMin = lifted && elapsed >= 5 && elapsed <= 150 ? elapsed : planned;
     saveSessions([...sessions, { ...active, completed: true, completedAt: new Date().toISOString(), durationMin }]);
     saveActive(null);
+    releaseWakeLock();
     setShowSession(false);
     setTab("today");
     say(`Saved: ${active.templateName}. Nice work.`);
@@ -176,8 +186,8 @@ export default function App() {
           onActivity={(patch) => updateActive((prev) => ({ ...prev, activity: { ...prev.activity, ...patch } }))}
           onSwap={swap}
           onComplete={complete}
-          onExit={() => setShowSession(false)}
-          onDiscard={() => { saveActive(null); setShowSession(false); say("Session discarded."); }}
+          onExit={pause}
+          onDiscard={() => { saveActive(null); releaseWakeLock(); setShowSession(false); say("Session discarded."); }}
         />
       </div>
     );

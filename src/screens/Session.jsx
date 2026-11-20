@@ -3,6 +3,16 @@ import { FORM_GUIDES, swapOptions } from "../exercises.js";
 import { ACTIVITIES, canDo, watchWorkoutFor } from "../engine/program.js";
 import { rampUpSets, secondLiftWarmup } from "../engine/progression.js";
 import { ActivityPicker, Checklist, Modal, fmtClock, fmtDate, fmtRest } from "../ui.jsx";
+import { getState as wakeLockState, keepAwake, subscribe as onWakeLock } from "../wakeLock.js";
+import { playChime, primeAudio } from "../chime.js";
+
+const KEEP_AWAKE_TEXT = {
+  held: "Screen stays on",
+  failed: "Your phone may lock. Set Auto-Lock to Never while you lift.",
+};
+
+/** How long the "Rest's up" state shows before the timer bar goes away. */
+const REST_DONE_MS = 4000;
 
 const ROLE_LABEL = { main: "Main lift", second: "Second lift" };
 
@@ -168,29 +178,33 @@ export default function SessionScreen({
   const [now, setNow] = useState(Date.now());
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [restDone, setRestDone] = useState(false);
+  const [awake, setAwake] = useState(wakeLockState);
+
+  // The wake lock itself is requested in the Start and Resume taps (App.jsx); this only shows its state.
+  useEffect(() => onWakeLock(setAwake), []);
 
   useEffect(() => {
-    if (!timer) return undefined;
+    if (!timer || timer.done) return undefined;
     const id = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(id);
   }, [timer]);
 
-  const remaining = timer ? Math.max(0, Math.ceil((timer.endsAt - now) / 1000)) : 0;
+  const remaining = timer && !timer.done ? Math.max(0, Math.ceil((timer.endsAt - now) / 1000)) : 0;
   useEffect(() => {
-    if (timer && remaining === 0) {
-      setTimer(null);
+    if (timer && !timer.done && remaining === 0) {
+      setTimer({ ...timer, done: true });
       setRestDone(true);
+      playChime();
       navigator.vibrate?.(200);
     }
   }, [timer, remaining]);
 
-  // Keep the screen on while a session is active.
+  // "Rest's up" shows for a few seconds, then the bar goes away.
   useEffect(() => {
-    if (!("wakeLock" in navigator)) return undefined;
-    let lock = null;
-    navigator.wakeLock.request("screen").then((l) => { lock = l; }).catch(() => {});
-    return () => { lock?.release(); };
-  }, []);
+    if (!timer?.done) return undefined;
+    const id = setTimeout(() => setTimer(null), REST_DONE_MS);
+    return () => clearTimeout(id);
+  }, [timer]);
 
   // Consecutive exercises that share a group render inside one dashed box.
   const blocks = useMemo(() => {
@@ -204,6 +218,9 @@ export default function SessionScreen({
   }, [session.exercises]);
 
   function toggleSet(exIndex, setIndex) {
+    // A tap is user activation: unlock audio for the chime, and retry the wake lock if it failed.
+    primeAudio();
+    if (wakeLockState() === "failed") keepAwake();
     const ex = session.exercises[exIndex];
     const wasDone = ex.sets[setIndex].done;
     onUpdateSet(exIndex, setIndex, { done: !wasDone });
@@ -256,6 +273,8 @@ export default function SessionScreen({
       </header>
 
       <div className="session-body">
+        <p className="keep-awake" aria-live="polite">{KEEP_AWAKE_TEXT[awake] || ""}</p>
+
         {session.format && (
           <div className="card session-summary">
             <div className="row wrap">
@@ -333,13 +352,22 @@ export default function SessionScreen({
 
       <footer className="session-footer">
         <div aria-live="polite" className="sr-only">{restDone ? "Rest is over." : ""}</div>
-        {timer && (
+        {timer && !timer.done && (
           <div className="timer">
             <div>
               <div className="timer-time" aria-label={`Rest, ${remaining} seconds left`}>Rest {fmtClock(remaining)}</div>
               <div className="timer-label">{timer.label}</div>
             </div>
             <button type="button" className="btn-small" onClick={() => setTimer(null)}>Skip rest</button>
+          </div>
+        )}
+        {timer?.done && (
+          <div className="timer timer-done">
+            <div>
+              <div className="timer-time">Rest's up</div>
+              <div className="timer-label">{timer.label}</div>
+            </div>
+            <button type="button" className="btn-small" onClick={() => setTimer(null)}>Dismiss</button>
           </div>
         )}
         <button type="button" className="btn-primary" onClick={onComplete}>Finish and save</button>
