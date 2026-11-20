@@ -48,9 +48,9 @@ input[type=number] { -moz-appearance: textfield; }
 .header-top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1; gap: 12px; }
 .app-title { font-size: 26px; font-weight: 800; color: var(--on-hot); letter-spacing: -0.02em; line-height: 1.1; }
 .app-sub { font-size: 13px; color: var(--on-hot-soft); margin-top: 3px; }
-.streak-badge { background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.45); border-radius: 12px; padding: 8px 12px; text-align: center; flex-shrink: 0; }
-.streak-num { font-size: 22px; font-weight: 800; color: var(--on-hot); line-height: 1; }
-.streak-label { font-size: 12px; font-weight: 700; color: var(--on-hot); margin-top: 2px; }
+.week-badge { background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.45); border-radius: 12px; padding: 8px 12px; text-align: center; flex-shrink: 0; }
+.week-badge-num { font-size: 22px; font-weight: 800; color: var(--on-hot); line-height: 1; }
+.week-badge-label { font-size: 12px; font-weight: 700; color: var(--on-hot); margin-top: 2px; }
 
 /* ── Nav ── */
 .nav { display: flex; background: var(--hot); padding: 0 max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); gap: 5px; }

@@ -6,9 +6,11 @@ export const KEYS = {
   programStart: "move_program_start", // Monday the program began, YYYY-MM-DD
   settings: "move_settings",       // minutes per day, equipment, bar weight, outdoor options
   swaps: "move_swaps",             // standing swaps: { originalExerciseId: replacementId }
-  rerolls: "move_rerolls",         // Sunday surprise rerolls: { dayKey: count }
   lengths: "move_lengths",         // per-day length picks: { dayKey: "short" | 30 | 45 }
 };
+
+/** Keys that older versions wrote and this one no longer reads. Removed on load. */
+export const RETIRED_KEYS = ["move_rerolls"];
 
 export const LS = {
   get(key, fallback = null) {
@@ -27,5 +29,13 @@ export const LS = {
     }
   },
 };
+
+export function dropRetiredKeys() {
+  try {
+    for (const k of RETIRED_KEYS) localStorage.removeItem(k);
+  } catch {
+    /* ignore */
+  }
+}
 
 export const uid = () => Math.random().toString(36).slice(2, 9);

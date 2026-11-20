@@ -3,9 +3,9 @@ import "./styles.css";
 import { byId } from "./exercises.js";
 import { ACTIVITIES, buildSessionFor, normalizeSession, swapExercise, withDefaults } from "./engine/program.js";
 import { applySuggestions } from "./engine/progression.js";
-import { streak, weekSummary } from "./engine/stats.js";
+import { daysMovedThisWeek, weekSummary } from "./engine/stats.js";
 import { entryDayKey, fromKey, mondayOf, toKey } from "./engine/dates.js";
-import { KEYS, LS, uid } from "./storage.js";
+import { KEYS, LS, dropRetiredKeys, uid } from "./storage.js";
 import TodayScreen from "./screens/Today.jsx";
 import SessionScreen from "./screens/Session.jsx";
 import WeekScreen from "./screens/Week.jsx";
@@ -16,6 +16,8 @@ import SettingsForm from "./screens/Settings.jsx";
 import { fmtDate } from "./ui.jsx";
 
 const TABS = [["today", "Today"], ["week", "Week"], ["log", "Log"], ["library", "Library"], ["why", "Why"]];
+
+dropRetiredKeys();
 
 function initialProgramStart() {
   const saved = LS.get(KEYS.programStart);
@@ -34,7 +36,6 @@ export default function App() {
   const [showSession, setShowSession] = useState(false);
   const [settings, setSettings] = useState(() => withDefaults(LS.get(KEYS.settings)));
   const [swaps, setSwaps] = useState(() => LS.get(KEYS.swaps, {}));
-  const [rerolls, setRerolls] = useState(() => LS.get(KEYS.rerolls, {}));
   const [lengths, setLengths] = useState(() => LS.get(KEYS.lengths, {}));
   const [programStart] = useState(initialProgramStart);
   const [status, setStatus] = useState("");
@@ -61,7 +62,7 @@ export default function App() {
   const lengthFor = (dayKey) => lengths[dayKey] ?? settings.minutes;
 
   function planFor(dayKey) {
-    const base = buildSessionFor(fromKey(dayKey), programStart, { length: lengthFor(dayKey), reroll: rerolls[dayKey] || 0, settings });
+    const base = buildSessionFor(fromKey(dayKey), programStart, { length: lengthFor(dayKey), settings });
     const ids = new Set(base.exercises.map((e) => e.exerciseId));
     const swapped = {
       ...base,
@@ -73,9 +74,9 @@ export default function App() {
     return applySuggestions(swapped, sessions, { barWeight: settings.barWeight });
   }
 
-  const plan = useMemo(() => planFor(selectedKey), [selectedKey, sessions, swaps, rerolls, lengths, programStart, settings]);
+  const plan = useMemo(() => planFor(selectedKey), [selectedKey, sessions, swaps, lengths, programStart, settings]);
   const week = useMemo(() => weekSummary(sessions, mondayOf(today)), [sessions, today]);
-  const streakCount = useMemo(() => streak(sessions, today), [sessions, today]);
+  const movedCount = useMemo(() => daysMovedThisWeek(sessions, today), [sessions, today]);
   const doneKeys = useMemo(() => new Set(sessions.map(entryDayKey)), [sessions]);
   const planDone = sessions.some((s) => s.planDayKey === selectedKey);
 
@@ -136,11 +137,6 @@ export default function App() {
     setStatus("Plan updated.");
   }
 
-  function reroll() {
-    const next = { ...rerolls, [selectedKey]: (rerolls[selectedKey] || 0) + 1 };
-    setRerolls(next); LS.set(KEYS.rerolls, next);
-  }
-
   function setLength(length) {
     const next = { ...lengths };
     if (length === settings.minutes) delete next[selectedKey]; else next[selectedKey] = length;
@@ -190,9 +186,9 @@ export default function App() {
             <h1 className="app-title">Let's move.</h1>
             <div className="app-sub">{fmtDate(today, { weekday: "long", month: "long", day: "numeric" })}</div>
           </div>
-          <div className="streak-badge" role="img" aria-label={`${streakCount} day streak`}>
-            <div className="streak-num" aria-hidden="true">{streakCount}</div>
-            <div className="streak-label" aria-hidden="true">day streak</div>
+          <div className="week-badge" role="img" aria-label={`${movedCount} ${movedCount === 1 ? "day" : "days"} moved this week`}>
+            <div className="week-badge-num" aria-hidden="true">{movedCount}</div>
+            <div className="week-badge-label" aria-hidden="true">{movedCount === 1 ? "day" : "days"} this week</div>
           </div>
         </div>
       </header>
@@ -217,13 +213,13 @@ export default function App() {
             planDone={planDone} week={week} doneKeys={doneKeys} status={status}
             activeSession={active} onResume={() => setShowSession(true)}
             onStart={() => start(plan)}
-            onReroll={reroll} onQuickLog={quickLog} onOpenWhy={() => setTab("why")}
+            onQuickLog={quickLog} onOpenWhy={() => setTab("why")}
           />
         )}
         {!firstRun && tab === "week" && (
-          <WeekScreen today={today} sessions={sessions} programStart={programStart} streakCount={streakCount}
+          <WeekScreen today={today} sessions={sessions} programStart={programStart}
             swaps={swaps} onRemoveSwap={removeSwap} settings={settings} onSaveSettings={saveSettings}
-            lengths={lengths} rerolls={rerolls} />
+            lengths={lengths} />
         )}
         {!firstRun && tab === "log" && (
           <LogScreen sessions={sessions} extras={{ programStart, swaps, settings }}

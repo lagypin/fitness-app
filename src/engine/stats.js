@@ -1,7 +1,7 @@
-// ─── Streaks, weekly totals, and the shareable recap ──────────────────────────
+// ─── Weekly totals, days moved, and the shareable recap ──────────────────────────
 
 import { ACTIVITIES } from "./program.js";
-import { addDays, entryDayKey, startOfDay, toKey } from "./dates.js";
+import { addDays, entryDayKey, mondayOf, toKey } from "./dates.js";
 
 // World Health Organization 2020 guidelines for adults (see evidence.js).
 export const AEROBIC_TARGET_MIN = 150;
@@ -31,17 +31,9 @@ export function isStrengthEntry(entry) {
   return doneSets(entry, (ex) => STRENGTH_PATTERNS.has(ex.category)) >= 6;
 }
 
-/** Consecutive days with any logged movement. Today is allowed to be empty. */
-export function streak(sessions, today = new Date()) {
-  const days = new Set(sessions.map(entryDayKey));
-  let count = 0;
-  let d = startOfDay(today);
-  if (!days.has(toKey(d))) d = addDays(d, -1);
-  while (days.has(toKey(d))) {
-    count++;
-    d = addDays(d, -1);
-  }
-  return count;
+/** Days with any logged movement in the week (Monday to Sunday) that holds `today`. Resets every Monday. */
+export function daysMovedThisWeek(sessions, today = new Date()) {
+  return weekSummary(sessions, mondayOf(today)).activeDays;
 }
 
 export function weekSummary(sessions, monday) {
@@ -101,11 +93,11 @@ export function liftsThatWentUp(sessions, monday) {
 }
 
 /** Plain-text week recap for the share sheet. */
-export function weekRecap(sessions, monday, today = new Date()) {
+export function weekRecap(sessions, monday) {
   const w = weekSummary(sessions, monday);
   const fmt = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const lines = [`My week in Move (${fmt(monday)} to ${fmt(addDays(monday, 6))})`];
-  lines.push(`Moved ${w.activeDays} of 7 days. Streak: ${streak(sessions, today)}.`);
+  lines.push(`Moved ${w.activeDays} of 7 days.`);
   const names = w.entries.map((s) => s.templateName).filter(Boolean);
   if (names.length) lines.push(`Sessions: ${names.join(", ")}.`);
   lines.push(`Strength days: ${w.strengthDays}. Aerobic minutes: ${w.aerobicMinutes}.`);

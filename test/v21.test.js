@@ -1,11 +1,11 @@
-// Version 2.1: Tuesday cardio, per-day length, outdoor options, planned minutes.
+// Version 2.1: Tuesday cardio, per-day length, outdoor options, planned minutes. Updated for the 2.2 week (open days).
 import test from "node:test";
 import assert from "node:assert/strict";
 
 import { addDays, fromKey, toKey } from "../src/engine/dates.js";
 import {
   buildSessionFor as build, normalizeSession, EQUIPMENT, DEFAULT_SETTINGS,
-  activityMenu, plannedAerobicMinutes, CARDIO_TYPES, LENGTHS,
+  activityMenu, plannedAerobicMinutes, CARDIO_TYPES, CARDIO_MINUTES, LENGTHS,
 } from "../src/engine/program.js";
 
 const START = "2026-11-09"; // a Monday
@@ -45,59 +45,43 @@ test("Tuesday is cardio then core, on the rower or on foot, and fits the day at 
   assert.match(walk.cardio[0].text, /walk/i);
 });
 
-test("mobility days lead with brisk cardio, then the stretches or a class", () => {
-  for (let w = 0; w < 6; w++) {
-    for (const d of [3, 5]) {
-      const s = buildSessionFor(day(w, d), START);
-      assert.ok(s.cardio.length >= 1, `week ${w} day ${d}`);
-      assert.ok(["walk", "row"].includes(s.activity.type));
-      assert.ok(s.activity.minutes >= 10);
-      assert.ok(total(s) <= 30, `${s.format.id}: ${total(s)}`);
-      if (s.format.id === "class") assert.match(s.warmup[0].text, /Bend and Peloton/);
-      else assert.ok(s.warmup.filter((i) => /2 × 30 sec|60 sec/.test(i.text)).length >= 4);
-    }
-  }
-});
-
-test("no hike anywhere with hikes off (the default): any day, menu, length, or reroll", () => {
+test("no hike anywhere with hikes off (the default): any day, menu, or length", () => {
   assert.equal(DEFAULT_SETTINGS.hikes, false);
   assert.equal(DEFAULT_SETTINGS.swims, true);
   for (const start of [START, "2026-06-01", "2026-04-06"]) {
     const m = fromKey(start);
     for (let i = 0; i < 18 * 7; i++) {
-      for (let reroll = 0; reroll < 8; reroll++) {
-        for (const length of LENGTHS) {
-          const s = buildSessionFor(addDays(m, i), start, { reroll, length });
-          const where = `${toKey(addDays(m, i))} reroll ${reroll} ${length}`;
-          assert.notEqual(s.activity?.type, "hike", where);
-          assert.ok(!(s.activity?.options || []).includes("hike"), `menu on ${where}`);
-          assert.notEqual(s.surpriseId, "hike", where);
-          assert.ok(!/hike|hiking/i.test(allText(s) + s.templateName), where);
-        }
+      for (const length of LENGTHS) {
+        const s = buildSessionFor(addDays(m, i), start, { length });
+        const where = `${toKey(addDays(m, i))} ${length}`;
+        assert.notEqual(s.activity?.type, "hike", where);
+        assert.ok(!(s.activity?.options || []).includes("hike"), `menu on ${where}`);
+        assert.ok(!/hike|hiking/i.test(allText(s) + s.templateName), where);
       }
     }
   }
   assert.ok(!("hike" in activityMenu(ME)));
   assert.ok("hike" in activityMenu({ ...ME, hikes: true }));
-  // with hikes on, a hike can come up again
-  const june = fromKey("2026-06-01");
+  // with hikes on, the easy-cardio padding on a 45-minute lift day offers a hike
   let hikes = 0;
-  for (let i = 0; i < 56; i++) for (let r = 0; r < 4; r++) {
-    if (buildSessionFor(addDays(june, i), "2026-06-01", { reroll: r, settings: { ...ME, hikes: true } }).activity?.type === "hike") hikes++;
+  for (let i = 0; i < 56; i++) {
+    if ((buildSessionFor(addDays(monday, i), START, { length: 45, settings: { ...ME, hikes: true } }).activity?.options || []).includes("hike")) hikes++;
   }
   assert.ok(hikes > 0);
 });
 
 test("summer swims can be switched off", () => {
   const june = fromKey("2026-06-01");
-  let on = 0, off = 0;
-  for (let i = 0; i < 56; i++) for (let r = 0; r < 4; r++) {
-    if (buildSessionFor(addDays(june, i), "2026-06-01", { reroll: r }).activity?.type === "swim") on++;
-    const s = buildSessionFor(addDays(june, i), "2026-06-01", { reroll: r, settings: { ...ME, swims: false } });
+  let on = 0, off = 0, winter = 0;
+  for (let i = 0; i < 56; i++) {
+    if ((buildSessionFor(addDays(june, i), "2026-06-01", { length: 45 }).activity?.options || []).includes("swim")) on++;
+    const s = buildSessionFor(addDays(june, i), "2026-06-01", { length: 45, settings: { ...ME, swims: false } });
     if (s.activity?.type === "swim" || (s.activity?.options || []).includes("swim")) off++;
+    if ((buildSessionFor(addDays(monday, i), START, { length: 45 }).activity?.options || []).includes("swim")) winter++;
   }
   assert.ok(on > 0);
   assert.equal(off, 0);
+  assert.equal(winter, 0);
   assert.ok(!("swim" in activityMenu({ ...ME, swims: false })));
 });
 
@@ -112,12 +96,13 @@ test("no session contains a jumping move, cardio included, at every length", () 
   }
 });
 
-test("a 45-minute day is longer than a 30-minute day for every day type, and each length fits its minutes", () => {
+test("a 45-minute day is longer than a 30-minute day for every planned day, and each length fits its minutes", () => {
   {
     for (let i = 0; i < 42; i++) {
       const d = addDays(monday, i);
       const settings = ME;
       const s30 = buildSessionFor(d, START, { length: 30, settings });
+      if (s30.kind === "open") continue;
       const s45 = buildSessionFor(d, START, { length: 45, settings });
       const sh = buildSessionFor(d, START, { length: "short", settings });
       assert.ok(total(s45) > total(s30), `${s30.templateName} ${toKey(d)}: ${total(s30)} vs ${total(s45)}`);
@@ -145,18 +130,21 @@ test("a 45-minute day is longer than a 30-minute day for every day type, and eac
   assert.ok(filled > 0);
 });
 
-test("planned aerobic minutes fall in the stated ranges: about 35 to 80 at 30 minutes, 60 to 140 at 45", () => {
+test("planned aerobic minutes are Tuesday's cardio plus any easy-cardio padding on 45-minute lift days", () => {
   for (let w = 0; w < 18; w++) {
     const m = addDays(monday, w * 7);
     const at30 = plannedAerobicMinutes(m, START, ME);
     const at45 = plannedAerobicMinutes(m, START, { ...ME, minutes: 45 });
-    assert.ok(at30 >= 35 && at30 <= 90, `week ${w} at 30: ${at30}`);
-    assert.ok(at45 >= 60 && at45 <= 180, `week ${w} at 45: ${at45}`);
+    assert.ok(at30 >= CARDIO_MINUTES[30] && at30 <= CARDIO_MINUTES[30] + 3 * 15, `week ${w} at 30: ${at30}`);
+    assert.ok(at45 >= CARDIO_MINUTES[45] && at45 <= CARDIO_MINUTES[45] + 3 * 25, `week ${w} at 45: ${at45}`);
     assert.ok(at45 > at30);
   }
-  // a day's own length pick changes the total
-  const key = toKey(day(0, 3));
-  assert.notEqual(plannedAerobicMinutes(monday, START, ME, { lengths: { [key]: 45 } }), plannedAerobicMinutes(monday, START, ME));
+  // open days add nothing, whatever length is picked for them
+  const open = toKey(day(0, 3));
+  assert.equal(plannedAerobicMinutes(monday, START, ME, { lengths: { [open]: 45 } }), plannedAerobicMinutes(monday, START, ME));
+  // a lift day's own length pick can change the total
+  const push = toKey(day(0, 0));
+  assert.ok(plannedAerobicMinutes(monday, START, ME, { lengths: { [push]: 45 } }) >= plannedAerobicMinutes(monday, START, ME));
 });
 
 test("old saved sessions without a cardio list still load", () => {

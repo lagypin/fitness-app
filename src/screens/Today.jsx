@@ -37,11 +37,7 @@ function PlanList({ plan }) {
       </li>
     );
   });
-  (plan.main || []).forEach((item, i) => rows.push(<li key={`m${i}`}><span className="pl-name">{item.text}</span></li>));
-  if (plan.kind === "mobility" && !plan.short) {
-    rows.push(<li key="flow"><span className="pl-name">{plan.warmupTitle}</span><span className="pl-dose">about {plan.estMinutes} min</span></li>);
-  }
-  if (plan.activity && !plan.main && !plan.cardio?.length) {
+  if (plan.activity && !plan.cardio?.length) {
     const a = ACTIVITIES[plan.activity.type];
     rows.push(<li key="act"><span className="pl-name"><span aria-hidden="true">{a.emoji} </span>{a.label}</span><span className="pl-dose">{plan.activity.minutes} min</span></li>);
   }
@@ -63,7 +59,7 @@ function QuickLog({ onSave, onClose, initialType, activities }) {
 
 export default function TodayScreen({
   today, selectedKey, onSelect, plan, length, onLength, settings, planDone, week, doneKeys, activeSession,
-  onResume, onStart, onReroll, onQuickLog, onOpenWhy, status,
+  onResume, onStart, onQuickLog, onOpenWhy, status,
 }) {
   const [showWhy, setShowWhy] = useState(false);
   const [quick, setQuick] = useState(null);
@@ -109,6 +105,21 @@ export default function TodayScreen({
         })}
       </div>
 
+      {plan.kind === "open" ? (
+        <section className="card" aria-label="Open day">
+          <div className="row wrap" style={{ marginBottom: 8 }}>
+            {doneKeys.has(selectedKey) && <span className="tag green">✓ Moved</span>}
+            {!isToday && <span className="tag amber">{DAY_NAMES[dayIndex(selected)]}</span>}
+          </div>
+          <h2 className="plan-title"><span aria-hidden="true">{plan.emoji} </span>{plan.templateName}</h2>
+          <p className="plan-meta">{plan.note}</p>
+          {activeSession && (
+            <div className="stack" style={{ marginTop: 12 }}>
+              <button type="button" className="btn-primary" onClick={onResume}>Resume {activeSession.templateName}</button>
+            </div>
+          )}
+        </section>
+      ) : (
       <section className="card" aria-label="Planned session">
         <div className="row wrap" style={{ marginBottom: 8 }}>
           {plan.format && <span className="tag">{plan.kind === "lift" ? `${plan.format.name} week` : plan.format.name}</span>}
@@ -142,9 +153,6 @@ export default function TodayScreen({
             <button type="button" className="btn-primary" onClick={onStart}>
               {planDone ? "Do it again" : isToday ? "Start" : `Do ${dayPlan.name} today`}
             </button>
-            {plan.kind === "surprise" && (
-              <button type="button" className="btn-secondary" onClick={onReroll}>Deal me a different one</button>
-            )}
           </div>
         )}
 
@@ -161,8 +169,9 @@ export default function TodayScreen({
           </div>
         )}
       </section>
+      )}
 
-      <h2 className="label" id="quick-log">Log other movement</h2>
+      <h2 className="label" id="quick-log">{plan.kind === "open" ? "Log your movement" : "Log other movement"}</h2>
       <div className="chips" role="group" aria-labelledby="quick-log">
         {Object.entries(activities).map(([type, a]) => (
           <button key={type} type="button" className="chip" onClick={() => setQuick(type)}>

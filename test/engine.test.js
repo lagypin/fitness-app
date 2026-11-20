@@ -4,11 +4,11 @@ import assert from "node:assert/strict";
 import { EXERCISES, byId, FORM_GUIDES } from "../src/exercises.js";
 import { addDays, fromKey, mondayOf, toKey, weekIndexFor } from "../src/engine/dates.js";
 import {
-  buildSessionFor as build, clocks, DAY_PLAN, FORMATS, LIFT_DAYS, CORE_FORMATS, swapExercise, normalizeSession,
+  buildSessionFor as build, clocks, DAY_PLAN, FORMATS, LIFT_DAYS, CORE_FORMATS, swapExercise, normalizeSession, OPEN_DAY_NOTE,
   EQUIPMENT, DEFAULT_SETTINGS, canDo, liftPrep, activityMenu, plannedAerobicMinutes, CARDIO_TYPES, LENGTHS, withDefaults,
 } from "../src/engine/program.js";
 import { applySuggestions, suggestWeight, rampUpSets } from "../src/engine/progression.js";
-import { streak, weekSummary, weekRecap, aerobicMinutesOf, isStrengthEntry } from "../src/engine/stats.js";
+import { daysMovedThisWeek, weekSummary, weekRecap, aerobicMinutesOf, isStrengthEntry } from "../src/engine/stats.js";
 import { PRINCIPLES, SOURCES } from "../src/engine/evidence.js";
 
 const START = "2026-11-09"; // a Monday
@@ -35,7 +35,41 @@ test("dates: week index and Monday math", () => {
 
 test("the weekly split matches the plan", () => {
   assert.deepEqual(DAY_PLAN.map((d) => d.name),
-    ["Push", "Cardio + core", "Pull", "Mobility", "Hinge", "Mobility", "Surprise"]);
+    ["Push", "Cardio + core", "Pull", "Open day", "Hinge", "Open day", "Open day"]);
+  assert.deepEqual(DAY_PLAN.map((d) => d.kind), ["lift", "core", "lift", "open", "lift", "open", "open"]);
+  for (const d of DAY_PLAN.filter((x) => x.kind === "open")) assert.equal(d.emoji, "🌈");
+});
+
+test("Thursday, Saturday, and Sunday are open days: nothing planned, no exercises, no cardio, no length", () => {
+  for (let w = 0; w < 12; w++) {
+    for (const d of [3, 5, 6]) {
+      for (const length of LENGTHS) {
+        const s = buildSessionFor(day(w, d), START, { length });
+        assert.equal(s.kind, "open", toKey(day(w, d)));
+        assert.equal(s.templateName, "Open day");
+        assert.equal(s.note, OPEN_DAY_NOTE);
+        assert.equal(s.exercises.length, 0);
+        assert.equal(s.warmup.length, 0);
+        assert.equal(s.cooldown.length, 0);
+        assert.equal(s.cardio, undefined);
+        assert.equal(s.activity, undefined);
+        assert.equal(s.estMinutes, 0);
+        assert.ok(!s.short);
+        assert.ok(!s.format);
+      }
+    }
+  }
+});
+
+test("the mobility flows and the Sunday surprise are gone", () => {
+  const gone = /surprise|mobility|deal me|bend|peloton|neck flexion|foam roll|guided class/i;
+  for (let i = 0; i < 126; i++) {
+    for (const length of LENGTHS) {
+      const s = buildSessionFor(addDays(monday, i), START, { length });
+      assert.ok(!gone.test(allText(s) + " " + s.templateName + " " + (s.format?.name || "") + " " + (s.note || "")), `${toKey(addDays(monday, i))}: ${allText(s)}`);
+    }
+  }
+  assert.ok(!/surprise|mobility day|bend|peloton|streak/i.test(JSON.stringify(PRINCIPLES)));
 });
 
 test("every day for 18 weeks builds, in winter and summer", () => {
@@ -46,7 +80,7 @@ test("every day for 18 weeks builds, in winter and summer", () => {
       for (const opts of [{}, { short: true }]) {
         const s = buildSessionFor(d, start, opts);
         assert.ok(s.templateName, `name on ${toKey(d)}`);
-        assert.ok(s.estMinutes > 0, `duration on ${toKey(d)}`);
+        if (s.kind !== "open") assert.ok(s.estMinutes > 0, `duration on ${toKey(d)}`);
         for (const ex of s.exercises) assert.ok(byId(ex.exerciseId), ex.exerciseId);
       }
     }
@@ -103,11 +137,7 @@ test("the PT exercises are gone from the program and the library", () => {
   assert.ok(!gone.test(JSON.stringify(PRINCIPLES)));
 });
 
-test("mobility days hold static stretches for 60 seconds in total; lifting warm-ups have no static holds", () => {
-  const thu = buildSessionFor(day(0, 3), START);
-  const stretches = thu.warmup.filter((i) => /stretch|pose|dog|twist/i.test(i.text) && !/Optional/.test(i.text));
-  assert.ok(stretches.length >= 4);
-  for (const st of stretches) assert.match(st.text, /2 × 30 sec|60 sec/, st.text);
+test("lifting warm-ups have no static holds; the cool-down has one stretch per lift", () => {
   for (const d of [0, 2, 4]) {
     const s = buildSessionFor(day(0, d), START);
     for (const item of s.warmup) assert.ok(!/stretch: |pose/i.test(item.text), item.text);
@@ -166,19 +196,13 @@ test("short lift sessions get one warm-up move and one stretch", () => {
   for (const d of [1, 3, 5, 6]) assert.equal(buildSessionFor(day(0, d), START).cooldownTitle, undefined);
 });
 
-test("upper-back and shoulder accessories show up every week; neck moves are on the Back + shoulders day", () => {
+test("upper-back and shoulder accessories show up every week", () => {
   const upper = new Set(["ex_barbell_row", "ex_ring_rows", "ex_db_single_arm_row", "ex_face_pull", "ex_kb_single_arm_row", "ex_incline_reverse_fly", "ex_landmine_row", "ex_rear_delt_fly", "ex_lateral_raise"]);
   for (let w = 0; w < 12; w++) {
     let n = 0;
     for (const d of [0, 2, 4]) n += buildSessionFor(day(w, d), START).exercises.filter((e) => upper.has(e.exerciseId)).length;
     assert.ok(n >= 2, `week ${w}`);
   }
-  let found = false;
-  for (let i = 0; i < 21; i++) {
-    const s = buildSessionFor(addDays(monday, i), START);
-    if (s.format?.id === "back_shoulders") { found = true; assert.match(allText(s), /Neck flexion/); assert.match(allText(s), /Lateral neck flexion/); }
-  }
-  assert.ok(found);
 });
 
 test("warm-up and stretch links point at the ACE library", () => {
@@ -203,10 +227,6 @@ test("lifting sessions fit the minutes setting; short versions fit in 20", () =>
       }
       const core = buildSessionFor(day(w, 1), START, { settings });
       assert.ok(core.estMinutes + core.activity.minutes <= minutes, `core ${core.format.id}: ${core.estMinutes} + ${core.activity.minutes}`);
-      for (const d of [3, 5]) {
-        const m = buildSessionFor(day(w, d), START, { settings });
-        if (m.format.id !== "class") assert.ok(m.estMinutes + m.activity.minutes <= minutes + 5, `mobility: ${m.estMinutes}+${m.activity.minutes}`);
-      }
     }
   }
 });
@@ -245,7 +265,7 @@ test("the plan only uses equipment the person has", () => {
   for (const equipment of kits) {
     const settings = { minutes: 30, equipment };
     for (let i = 0; i < 84; i++) {
-      for (const opts of [{}, { short: true }, { reroll: 1 }]) {
+      for (const opts of [{}, { short: true }, { length: 45 }]) {
         const s = buildSessionFor(addDays(monday, i), START, { ...opts, settings });
         for (const ex of s.exercises) assert.ok(canDo(byId(ex.exerciseId), equipment), `${equipment}: ${ex.name}`);
         if (!equipment.includes("rower")) assert.notEqual(s.activity?.type, "row");
@@ -277,22 +297,6 @@ test("no exercise repeats within a session, and none repeats as an accessory in 
     }
     assert.equal(new Set(weekAccessories).size, weekAccessories.length, `week ${w}`);
   }
-});
-
-test("Sunday reroll deals something different; swim only shows up in summer", () => {
-  const a = buildSessionFor(day(0, 6), START);
-  const b = buildSessionFor(day(0, 6), START, { reroll: 1 });
-  assert.notEqual(a.surpriseId, b.surpriseId);
-  for (let w = 0; w < 12; w++) {
-    for (const d of [3, 5, 6]) {
-      const s = buildSessionFor(day(w, d), START); // Nov to Jan
-      assert.notEqual(s.activity?.type, "swim");
-    }
-  }
-  const june = fromKey("2026-06-01");
-  let swims = 0;
-  for (let i = 0; i < 28; i++) if (buildSessionFor(addDays(june, i), "2026-06-01").activity?.type === "swim") swims++;
-  assert.ok(swims > 0);
 });
 
 test("program data only references real exercises; form guides too", () => {
@@ -392,12 +396,12 @@ test("applySuggestions prefills weights and ramp-up sets read from them", () => 
 
 const entry = (dayKey, extra = {}) => ({ id: dayKey + Math.random(), dayKey, date: fromKey(dayKey).toISOString(), exercises: [], ...extra });
 
-test("streak counts back from today, and forgives an empty today", () => {
-  const s = [entry("2026-11-09"), entry("2026-11-10"), entry("2026-11-11")];
-  assert.equal(streak(s, fromKey("2026-11-11")), 3);
-  assert.equal(streak(s, fromKey("2026-11-12")), 3);
-  assert.equal(streak(s, fromKey("2026-11-13")), 0);
-  assert.equal(streak([], fromKey("2026-11-13")), 0);
+test("days moved this week counts distinct days Monday to Sunday and starts over on Monday", () => {
+  const s = [entry("2026-11-08"), entry("2026-11-09"), entry("2026-11-10"), entry("2026-11-10"), entry("2026-11-15")];
+  assert.equal(daysMovedThisWeek(s, fromKey("2026-11-11")), 3); // Mon, Tue (twice), Sun; last Sunday is last week
+  assert.equal(daysMovedThisWeek(s, fromKey("2026-11-15")), 3);
+  assert.equal(daysMovedThisWeek(s, fromKey("2026-11-16")), 0); // the next Monday
+  assert.equal(daysMovedThisWeek([], fromKey("2026-11-13")), 0);
 });
 
 test("weekly totals: hard minutes count double, yoga is not aerobic, strength days need real lifting", () => {
@@ -417,9 +421,10 @@ test("weekly totals: hard minutes count double, yoga is not aerobic, strength da
   assert.equal(w.strengthDays, 1);
   assert.equal(w.activeDays, 4);
   assert.equal(w.setsByPattern.squat, 5);
-  const recap = weekRecap(s, monday, fromKey("2026-11-12"));
+  const recap = weekRecap(s, monday);
   assert.match(recap, /Moved 4 of 7 days/);
   assert.match(recap, /Aerobic minutes: 70/);
+  assert.ok(!/streak/i.test(recap));
   assert.ok(!recap.includes("—"));
 });
 

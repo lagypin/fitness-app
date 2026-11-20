@@ -133,12 +133,6 @@ export const SOURCES = {
     journal: "Sports Medicine",
     doi: "10.1007/s40279-022-01804-x",
   },
-  wilke2020: {
-    cite: "Wilke et al., 2020",
-    title: "Acute Effects of Foam Rolling on Range of Motion in Healthy Adults: A Systematic Review with Multilevel Meta-analysis",
-    journal: "Sports Medicine",
-    doi: "10.1007/s40279-019-01205-7",
-  },
   warneke2025: {
     cite: "Warneke et al., 2025",
     title: "Practical recommendations on stretching exercise: A Delphi consensus statement of international research experts",
@@ -211,6 +205,12 @@ export const SOURCES = {
     journal: "International Journal of Behavioral Nutrition and Physical Activity",
     doi: "10.1186/s12966-020-01045-z",
   },
+  dossantos2022: {
+    cite: "Dos Santos et al., 2022",
+    title: "Association of the \"Weekend Warrior\" and Other Leisure-time Physical Activity Patterns With All-Cause and Cause-Specific Mortality: A Nationwide Cohort Study",
+    journal: "JAMA Internal Medicine",
+    doi: "10.1001/jamainternmed.2022.2488",
+  },
 };
 
 export const PRINCIPLES = [
@@ -219,7 +219,7 @@ export const PRINCIPLES = [
     title: "The day names are labels for which lifts come first",
     rule: "Push, Pull, and Hinge are labels for which lifts come first on a given day. There is no study behind the names or the order. What the plan is built to hit is the weekly totals: strength work on 2 or more days, 150 minutes of aerobic activity, and flexibility work on 2 or more days. Nothing in the app involves jumping, for anyone.",
     evidence: "A 2024 meta-analysis of 14 trials (392 people) found that split routines and full-body routines produced the same strength gains and the same muscle growth when the weekly number of sets was equal. The World Health Organization and the American College of Sports Medicine set their guidance as weekly totals.",
-    limits: "The meta-analysis compared training splits in general. It did not test this particular week, and it says nothing about cardio or mobility days.",
+    limits: "The meta-analysis compared training splits in general. It did not test this particular week, and it says nothing about cardio or open days.",
     sources: ["ramoscampo2024", "bull2020", "garber2011"],
   },
   {
@@ -303,17 +303,17 @@ export const PRINCIPLES = [
     sources: ["iversen2021", "chaabene2019", "behm2015", "afonso2021recovery", "vanhooren2018", "warneke2025"],
   },
   {
-    id: "mobility",
-    title: "Stretching at a known dose",
-    rule: "Thursday and Saturday start with brisk cardio (a walk, or a row on alternate weeks), then static stretches for the major muscle groups: 30 seconds, twice per side, 60 seconds in total per stretch. A guided mobility or yoga class (Bend and Peloton both work) is an equal swap for the stretches. Foam rolling is optional.",
-    evidence: "The American College of Sports Medicine recommends flexibility exercise for each major muscle-tendon group on 2 or more days a week, totaling 60 seconds per exercise. A meta-analysis of 77 studies found that stretch training improves range of motion, that static stretching beat dynamic stretching for long-term gains, and that volume, intensity, and frequency made no significant difference. Two meta-analyses found that lifting with external loads improved range of motion about as much as stretching did. Foam rolling improved range of motion in the short term and was no better than stretching.",
-    limits: "Which stretches to include was a judgment call. The lists cover hips, hamstrings, calves, back, and shoulders using moves from the ACE library and the first version of this app. The 2025 consensus also concluded that stretching does not improve posture and is not a general injury-prevention strategy.",
-    sources: ["garber2011", "konrad2023", "afonso2021", "alizadeh2023", "wilke2020", "warneke2025"],
+    id: "open",
+    title: "Open days: walk, yoga, a swim, or rest",
+    rule: "Thursday, Saturday, and Sunday plan nothing. Walk, take a class, swim, or rest, and log whatever you do. Rest is a valid open day. The three lifting days and Tuesday cover the strength and flexibility targets, and the walks you log cover most of the aerobic minutes.",
+    evidence: "The guidelines are weekly totals: 150 to 300 moderate aerobic minutes, muscle strengthening on 2 or more days, and flexibility work on 2 to 3 or more days. In a cohort of 350,978 adults followed for about 10 years, people who reached the aerobic total in 1 or 2 sessions a week had the same all-cause, cardiovascular, and cancer mortality as people who spread it over 3 or more sessions. A meta-analysis of 77 studies found that stretch training improves range of motion, and two meta-analyses found that lifting through a full range of motion improved it about as much as stretching did, so the lifting days and their cool-down stretches do the flexibility work.",
+    limits: "The weekend-warrior finding is observational and self-reported, and it is about aerobic activity, not strength. The guideline's flexibility advice is a consensus recommendation. Which day is open is a judgment call about what fits a week.",
+    sources: ["bull2020", "garber2011", "dossantos2022", "konrad2023", "afonso2021", "alizadeh2023"],
   },
   {
     id: "neck",
     title: "Upper-back strength for the neck and shoulders",
-    rule: "A row is a main lift every week, and reverse flys, face pulls, and lateral raises rotate through the accessories. The Back + shoulders stretch day includes two slow neck range-of-motion moves. Any exercise that bothers your neck can be swapped once and stay swapped.",
+    rule: "A row is a main lift every week, and reverse flys, face pulls, and lateral raises rotate through the accessories. Any exercise that bothers your neck can be swapped once and stay swapped.",
     evidence: "In a randomized trial of 48 women with chronic trapezius pain, 10 weeks of strength training for the neck and shoulder muscles cut worst pain by about 79%, while general fitness training brought only a small, brief drop. A Cochrane review of 27 trials found moderate-quality evidence that strengthening the neck, shoulder, and shoulder-blade muscles reduces chronic neck pain, and that stretching alone may not help.",
     limits: "The Cochrane authors found no high-quality evidence, and no evidence either way for acute neck pain. The trial studied office workers with a clinical diagnosis. This app cannot tell what is causing a given knot. Numbness, tingling, or weakness down the arm is a reason to see a clinician before loading it.",
     sources: ["andersen2008", "gross2015"],
@@ -321,7 +321,7 @@ export const PRINCIPLES = [
   {
     id: "who",
     title: "Daily movement",
-    rule: "The Week tab tracks aerobic minutes against 150 and strength days against 2, and shows how many of the 150 the plan itself schedules so the rest can come from logged walks. Minutes you mark as hard count double. Walking counts as cardio when it is brisk: about 100 steps a minute in adults marks moderate intensity, and about 130 marks vigorous. The app counts every walking minute you log, because it cannot measure pace. Any logged movement keeps the streak, including a 10-minute walk.",
+    rule: "The Week tab tracks aerobic minutes against 150 and strength days against 2, and shows how many of the 150 the plan itself schedules so the rest can come from logged walks. Minutes you mark as hard count double. Walking counts as cardio when it is brisk: about 100 steps a minute in adults marks moderate intensity, and about 130 marks vigorous. The app counts every walking minute you log, because it cannot measure pace. Any logged movement counts as a day moved this week, including a 10-minute walk. The count starts over every Monday.",
     evidence: "The World Health Organization recommends 150 to 300 minutes of moderate aerobic activity a week (or 75 to 150 vigorous), plus muscle strengthening on 2 or more days, and states that some activity is better than none. Muscle-strengthening activity is associated with lower all-cause mortality. More daily steps are associated with progressively lower mortality, up to a level that varies by age. A 2018 review of 38 studies found 100 steps a minute a consistent marker of moderate intensity in adults, and a 2020 treadmill study of 80 adults aged 41 to 60 confirmed 100 steps a minute for moderate and set 130 for vigorous.",
     limits: "The mortality findings come from pooled observational cohorts, so they show association only. The cadence thresholds come from treadmill walking in healthy adults and vary from person to person.",
     sources: ["bull2020", "momma2022", "paluch2022", "tudorlocke2018", "tudorlocke2020"],
@@ -329,7 +329,7 @@ export const PRINCIPLES = [
   {
     id: "cardio",
     title: "Intervals, steady, and tempo",
-    rule: "Tuesday's cardio rotates weekly through three types on the rower (a brisk walk without one): intervals (1 minute hard, 1 minute easy, with an easy start and finish), a steady effort you could talk through, and a tempo block where talking takes effort. Intervals and tempo count as hard minutes. A 45-minute day gets more cardio minutes than a 30-minute day. Sunday sometimes deals rower intervals (8 rounds of 30 seconds hard, 2 minutes easy) or a steady row as well.",
+    rule: "Tuesday's cardio rotates weekly through three types on the rower (a brisk walk without one): intervals (1 minute hard, 1 minute easy, with an easy start and finish), a steady effort you could talk through, and a tempo block where talking takes effort. Intervals and tempo count as hard minutes. A 45-minute day gets more cardio minutes than a 30-minute day.",
     evidence: "A meta-analysis of 28 controlled trials found that steady endurance training and high-intensity intervals both raised VO2max, with a slightly larger gain from intervals.",
     limits: "Participants were healthy adults aged 18 to 45. The three protocols, their minutes, and the weekly rotation are a judgment call so that the week holds some hard and some easy cardio; no trial tested this particular mix.",
     sources: ["milanovic2015"],

@@ -11,7 +11,7 @@ import SettingsForm from "./Settings.jsx";
 const short = { month: "short", day: "numeric" };
 
 export default function WeekScreen({
-  today, sessions, programStart, streakCount, swaps, onRemoveSwap, settings, onSaveSettings, lengths = {}, rerolls = {},
+  today, sessions, programStart, swaps, onRemoveSwap, settings, onSaveSettings, lengths = {},
 }) {
   const [offset, setOffset] = useState(0);
   const [shareStatus, setShareStatus] = useState("");
@@ -20,12 +20,12 @@ export default function WeekScreen({
   const monday = addDays(mondayOf(today), offset * 7);
   const week = weekSummary(sessions, monday);
   const c = clocks(monday, programStart);
-  const planned = plannedAerobicMinutes(monday, programStart, settings, { lengths, rerolls });
+  const planned = plannedAerobicMinutes(monday, programStart, settings, { lengths });
   const swapList = Object.entries(swaps).filter(([from, to]) => byId(from) && byId(to));
 
   async function share() {
     // Share sheet first, then the clipboard, then plain text to copy by hand.
-    const text = weekRecap(sessions, monday, today);
+    const text = weekRecap(sessions, monday);
     setRecapText("");
     if (navigator.share) {
       try {
@@ -66,7 +66,7 @@ export default function WeekScreen({
 
       <div className="card">
         <p className="plan-meta" style={{ marginTop: 0 }}>
-          {FORMATS[c.formatIndex].name} week. Week {c.weekInBlock} of 6 with the current main lifts. Streak: {streakCount} {streakCount === 1 ? "day" : "days"}.
+          {FORMATS[c.formatIndex].name} week. Week {c.weekInBlock} of 6 with the current main lifts. {week.activeDays} {week.activeDays === 1 ? "day" : "days"} moved this week.
         </p>
         <Meter label="Aerobic minutes" value={week.aerobicMinutes} target={AEROBIC_TARGET_MIN} unit=" min"
           note={`WHO target for adults: ${AEROBIC_TARGET_MIN} moderate minutes a week. Hard minutes count double.`} />
@@ -75,7 +75,7 @@ export default function WeekScreen({
         </p>
         <Meter label="Strength days" value={week.strengthDays} target={STRENGTH_TARGET_DAYS}
           note="WHO target: muscle strengthening on 2 or more days a week." />
-        <Meter label="Days moved" value={week.activeDays} target={7} note="Any logged movement counts, including a 10-minute walk." />
+        <Meter label="Days moved" value={week.activeDays} target={7} note="Any logged movement counts, including a 10-minute walk. The count starts over every Monday." />
       </div>
 
       <h2 className="label">Hard sets by movement pattern</h2>
