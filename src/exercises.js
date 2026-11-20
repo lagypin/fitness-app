@@ -40,7 +40,7 @@ export const EXERCISES = [
     muscles: ["quads", "core", "upper_back"],
     defaultSets: 4,
     defaultReps: "5",
-    notes: "Main anchor lift. Bar on front delts, elbows high. More upright torso than back squat — quad dominant.",
+    notes: "Main anchor lift. Bar on front delts, elbows high. More upright torso than back squat, quad dominant.",
   },
   {
     id: "ex_box_squat",
@@ -95,7 +95,7 @@ export const EXERCISES = [
     muscles: ["quads", "glutes"],
     defaultSets: 3,
     defaultReps: "10",
-    notes: "Hold end of landmine bar at chest. Easier on the back — good squat pattern builder.",
+    notes: "Hold end of landmine bar at chest. Easier on the back, a good squat pattern builder.",
   },
 
   // ── HINGE ──────────────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ export const EXERCISES = [
     muscles: ["glutes", "hamstrings", "back", "grip"],
     defaultSets: 5,
     defaultReps: "5",
-    notes: "Main anchor lift. Warm up with empty bar. Hinge at hips — not waist. Bar stays close to body.",
+    notes: "Main anchor lift. Warm up with empty bar. Hinge at the hips, not the waist. Bar stays close to body.",
   },
   {
     id: "ex_sumo_deadlift",
@@ -153,7 +153,7 @@ export const EXERCISES = [
     muscles: ["hamstrings", "glutes", "balance"],
     defaultSets: 3,
     defaultReps: "8",
-    notes: "Each side. 40 lbs. Slow and controlled. Hip stays square — don't rotate.",
+    notes: "Each side. 40 lbs. Slow and controlled. Hip stays square, don't rotate.",
   },
   {
     id: "ex_good_morning",
@@ -164,7 +164,7 @@ export const EXERCISES = [
     muscles: ["hamstrings", "glutes", "lower_back"],
     defaultSets: 3,
     defaultReps: "10",
-    notes: "Keep light — 45–65 lbs. Proud chest, hinge slowly. Feels different from RDL.",
+    notes: "Keep light, 45 to 65 lbs. Proud chest, hinge slowly. Feels different from RDL.",
   },
   {
     id: "ex_landmine_rdl",
@@ -175,7 +175,7 @@ export const EXERCISES = [
     muscles: ["hamstrings", "glutes"],
     defaultSets: 3,
     defaultReps: "10",
-    notes: "Each side. Easier on the low back than barbell — good on high-fatigue days.",
+    notes: "Each side. Easier on the low back than barbell, good on high-fatigue days.",
   },
   {
     id: "ex_kb_deadlift",
@@ -208,7 +208,7 @@ export const EXERCISES = [
     muscles: ["glutes", "hamstrings"],
     defaultSets: 4,
     defaultReps: "10",
-    notes: "Upper back on bench, barbell across hips. Full range — from floor to lockout. Serious glute builder.",
+    notes: "Upper back on bench, barbell across hips. Full range, from floor to lockout. Serious glute builder.",
   },
   {
     id: "ex_step_up",
@@ -233,7 +233,7 @@ export const EXERCISES = [
     muscles: ["chest", "triceps", "shoulders"],
     defaultSets: 5,
     defaultReps: "5",
-    notes: "Main anchor — horizontal press. Retract shoulder blades. Bar to lower chest. 3-count descent.",
+    notes: "Main anchor, horizontal press. Retract shoulder blades. Bar to lower chest. 3-count descent.",
   },
   {
     id: "ex_barbell_ohp",
@@ -244,7 +244,7 @@ export const EXERCISES = [
     muscles: ["shoulders", "triceps", "core"],
     defaultSets: 5,
     defaultReps: "5",
-    notes: "Main anchor — vertical press. Brace core hard. Bar path slightly back at top. No lower back arch.",
+    notes: "Main anchor, vertical press. Brace core hard. Bar path slightly back at top. No lower back arch.",
   },
   {
     id: "ex_db_flat_press",
@@ -310,7 +310,7 @@ export const EXERCISES = [
     muscles: ["chest", "triceps"],
     defaultSets: 4,
     defaultReps: "8",
-    notes: "Feet on bench. Rings add instability — harder than they look. Scale by lowering feet.",
+    notes: "Feet on bench. Rings add instability: harder than they look. Scale by lowering feet.",
   },
   {
     id: "ex_lateral_raise",
@@ -569,7 +569,7 @@ export const EXERCISES = [
     muscles: ["core", "shoulders", "hips"],
     defaultSets: 3,
     defaultReps: "3",
-    notes: "20 lbs each side. Each rep is a full-body check-in. Go slow — there's no rushing a TGU.",
+    notes: "20 lbs each side. Each rep is a full-body check-in. Go slow: there's no rushing a TGU.",
   },
   {
     id: "ex_plank",
@@ -646,7 +646,7 @@ export const EXERCISES = [
     muscles: ["core", "hip_flexors"],
     defaultSets: 3,
     defaultReps: "20",
-    notes: "Slow and controlled — not a cardio sprint. Keep hips low and stable.",
+    notes: "Slow and controlled, not a cardio sprint. Keep hips low and stable.",
   },
 
   // ── MOBILITY ───────────────────────────────────────────────────────────────
@@ -1009,7 +1009,7 @@ export const accessoriesByCategory = (cat) =>
 export const byId = (id) =>
   EXERCISES.find((e) => e.id === id);
 
-/** Get swap candidates — same category, not the current exercise */
+/** Get swap candidates: same category, not the current exercise */
 export const swapOptions = (exerciseId) => {
   const ex = byId(exerciseId);
   if (!ex) return [];

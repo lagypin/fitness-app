@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test",
-    "check:contrast": "node scripts/check-contrast.mjs"
+    "check:contrast": "node scripts/check-contrast.mjs",
+    "check:screens": "node scripts/ssr-check.mjs"
   },
   "dependencies": {
     "nosleep.js": "^0.12.0",

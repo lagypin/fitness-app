@@ -91,6 +91,7 @@ npm install
 npm run dev        # http://localhost:5173
 npm test           # program, progression, stats, export, and cheers tests
 npm run check:contrast   # color pairs against WCAG 2.1 AA
+npm run check:screens    # renders each screen to HTML and checks what it shows
 npm run build      # static files in dist/
 ```
 
