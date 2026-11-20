@@ -6,7 +6,7 @@
 //   press    — horizontal and vertical push
 //   pull     — rows, ring rows, pull-ups, curls
 //   core     — carries, anti-rotation, stability
-//   mobility — stretching, warm-up/cool-down work, foot care
+//   mobility — stretching, warm-up/cool-down work
 //
 // isAnchor: true = main lift for a session (goes heavy, programmed first)
 // isAnchor: false = accessory work (supports the anchor, programmed after)
@@ -660,7 +660,7 @@ export const EXERCISES = [
     muscles: ["calves"],
     defaultSets: 3,
     defaultReps: "20",
-    notes: "On step for full range. Slow and controlled. PF rehab and calf strengthening.",
+    notes: "On step for full range. Slow and controlled.",
   },
   {
     id: "ex_single_leg_calf_raises",
@@ -671,18 +671,7 @@ export const EXERCISES = [
     muscles: ["calves"],
     defaultSets: 3,
     defaultReps: "15",
-    notes: "Each side. On step. More load than bilateral. Key for plantar fasciitis rehab.",
-  },
-  {
-    id: "ex_plantar_fascia_stretch",
-    name: "Plantar Fascia Stretch",
-    category: "mobility",
-    isAnchor: false,
-    equipment: ["bodyweight"],
-    muscles: ["plantar_fascia", "foot"],
-    defaultSets: 1,
-    defaultReps: "60 sec",
-    notes: "Each foot. Toe extension against floor or wall. Do this before getting out of bed too.",
+    notes: "Each side. On step. More load than bilateral.",
   },
   {
     id: "ex_banded_ankle_dorsiflexion",
@@ -694,17 +683,6 @@ export const EXERCISES = [
     defaultSets: 1,
     defaultReps: "15",
     notes: "Each side. Band around rack at ankle height. Drive knee forward over toe. Great for squat depth.",
-  },
-  {
-    id: "ex_towel_toe_scrunches",
-    name: "Towel Toe Scrunches",
-    category: "mobility",
-    isAnchor: false,
-    equipment: ["bodyweight"],
-    muscles: ["foot"],
-    defaultSets: 1,
-    defaultReps: "30",
-    notes: "Curl towel with toes. PF foot strengthening. Can do seated while working.",
   },
   {
     id: "ex_pigeon_pose",

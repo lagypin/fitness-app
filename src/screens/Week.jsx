@@ -130,7 +130,7 @@ export default function WeekScreen({
       <div className="card">
         <p style={{ fontSize: 14 }}>
           {settings.minutes} minutes a day · {settings.equipment.length} kinds of equipment
-          {settings.equipment.includes("barbell") ? ` · ${settings.barWeight} lb bar` : ""} · hikes {settings.hikes ? "on" : "off"} · summer swims {settings.swims ? "on" : "off"} · foot care {settings.footCare ? "on" : "off"}
+          {settings.equipment.includes("barbell") ? ` · ${settings.barWeight} lb bar` : ""} · hikes {settings.hikes ? "on" : "off"} · summer swims {settings.swims ? "on" : "off"}
         </p>
         <button type="button" className="btn-secondary" style={{ marginTop: 10 }} onClick={() => setEditing(true)}>Change settings</button>
       </div>

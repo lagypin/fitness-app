@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { EQUIPMENT } from "../engine/program.js";
 
-/** First-run setup and the Settings form are the same questions: minutes, equipment, bar weight, outdoor options, foot care. */
+/** First-run setup and the Settings form are the same questions: minutes, equipment, bar weight, outdoor options. */
 export default function SettingsForm({ settings, firstRun = false, onSave }) {
   const [draft, setDraft] = useState(settings);
   const has = (id) => draft.equipment.includes(id);
@@ -69,16 +69,6 @@ export default function SettingsForm({ settings, firstRun = false, onSave }) {
             {draft.swims ? "✓ " : ""}Summer swims
           </button>
         </div>
-      </div>
-
-      <div className="card">
-        <h3 className="section-head" id="set-feet">Foot care add-on</h3>
-        <button type="button" className="chip" aria-pressed={draft.footCare} onClick={() => setDraft({ ...draft, footCare: !draft.footCare })}>
-          {draft.footCare ? "✓ On" : "Off"}
-        </button>
-        <p className="muted" style={{ marginTop: 8 }}>
-          Adds calf raises, an ankle drill, and two foot stretches to every session. Useful if you manage plantar fasciitis. The Why tab has the research.
-        </p>
       </div>
 
       <button type="button" className="btn-primary" onClick={() => onSave({ ...draft, setupDone: true })}>

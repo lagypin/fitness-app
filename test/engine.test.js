@@ -5,7 +5,7 @@ import { EXERCISES, byId, FORM_GUIDES } from "../src/exercises.js";
 import { addDays, fromKey, mondayOf, toKey, weekIndexFor } from "../src/engine/dates.js";
 import {
   buildSessionFor as build, clocks, DAY_PLAN, FORMATS, LIFT_DAYS, CORE_FORMATS, swapExercise, normalizeSession,
-  EQUIPMENT, DEFAULT_SETTINGS, canDo, liftPrep, activityMenu, plannedAerobicMinutes, CARDIO_TYPES, LENGTHS,
+  EQUIPMENT, DEFAULT_SETTINGS, canDo, liftPrep, activityMenu, plannedAerobicMinutes, CARDIO_TYPES, LENGTHS, withDefaults,
 } from "../src/engine/program.js";
 import { applySuggestions, suggestWeight, rampUpSets } from "../src/engine/progression.js";
 import { streak, weekSummary, weekRecap, aerobicMinutesOf, isStrengthEntry } from "../src/engine/stats.js";
@@ -14,9 +14,9 @@ import { PRINCIPLES, SOURCES } from "../src/engine/evidence.js";
 const START = "2026-11-09"; // a Monday
 
 // The settings of the person this was first built for: everything in the gym,
-// a 35 lb bar, 30 minutes a day, foot care on. Tests use these unless they say otherwise.
+// a 35 lb bar, 30 minutes a day. Tests use these unless they say otherwise.
 const ALL_GEAR = EQUIPMENT.map((e) => e.id);
-const ME = { minutes: 30, footCare: true, barWeight: 35, equipment: ALL_GEAR };
+const ME = { minutes: 30, barWeight: 35, equipment: ALL_GEAR };
 const buildSessionFor = (date, start, opts = {}) => build(date, start, { settings: ME, ...opts });
 const monday = fromKey(START);
 const day = (week, dow) => addDays(monday, week * 7 + dow);
@@ -91,17 +91,6 @@ test("no jumping anywhere", () => {
   }
 });
 
-test("calf raises and ankle or foot work are in every session, short ones included", () => {
-  for (let i = 0; i < 42; i++) {
-    for (const opts of [{}, { short: true }]) {
-      const s = buildSessionFor(addDays(monday, i), START, opts);
-      const text = allText(s);
-      assert.match(text, /calf raises/i, `${s.templateName} ${toKey(addDays(monday, i))}`);
-      assert.match(text, /ankle|plantar/i, `${s.templateName} ${toKey(addDays(monday, i))}`);
-    }
-  }
-});
-
 test("the PT exercises are gone from the program and the library", () => {
   const gone = /Joe|\bPT\b|hip sinks|Midfoot mobilization|Yielding hip|Knee extensions|Spanish squat/i;
   for (const ex of EXERCISES) assert.ok(!gone.test(ex.name + " " + ex.notes), ex.name);
@@ -121,8 +110,8 @@ test("mobility days hold static stretches for 60 seconds in total; lifting warm-
   for (const st of stretches) assert.match(st.text, /2 × 30 sec|60 sec/, st.text);
   for (const d of [0, 2, 4]) {
     const s = buildSessionFor(day(0, d), START);
-    for (const item of s.warmup) assert.ok(!/stretch: |pose/i.test(item.text) || /ankle/i.test(item.text), item.text);
-    assert.equal(s.cooldown.length, 4); // two lift stretches, then the two foot stretches
+    for (const item of s.warmup) assert.ok(!/stretch: |pose/i.test(item.text), item.text);
+    assert.equal(s.cooldown.length, 2); // one stretch per lift
   }
 });
 
@@ -145,7 +134,7 @@ test("lift-day lists change with the block, never repeat a move, and skip Cat-co
   for (const [w, label] of [[0, "block A"], [6, "block B"]]) {
     for (const d of [0, 2, 4]) {
       for (const minutes of [30, 45]) {
-        const s = buildSessionFor(day(w, d), START, { settings: { ...ME, minutes, footCare: false } });
+        const s = buildSessionFor(day(w, d), START, { settings: { ...ME, minutes } });
         const warm = s.warmup.map((i) => i.text);
         const stretch = s.cooldown.map((i) => i.text);
         assert.equal(warm.length, 2, `${label} ${s.templateName} ${minutes}: ${warm}`);
@@ -158,8 +147,8 @@ test("lift-day lists change with the block, never repeat a move, and skip Cat-co
     }
   }
   for (const d of [0, 2, 4]) {
-    const a = buildSessionFor(day(0, d), START, { settings: { ...ME, footCare: false } });
-    const b = buildSessionFor(day(6, d), START, { settings: { ...ME, footCare: false } });
+    const a = buildSessionFor(day(0, d), START);
+    const b = buildSessionFor(day(6, d), START);
     // Both squats warm up with a bodyweight squat and both presses with I-Y-T-W, so
     // the Push and Hinge warm-ups match across blocks. The stretches always differ.
     assert.notDeepEqual(a.cooldown.map((i) => i.text), b.cooldown.map((i) => i.text), a.templateName);
@@ -167,17 +156,11 @@ test("lift-day lists change with the block, never repeat a move, and skip Cat-co
   }
 });
 
-test("short lift sessions get one warm-up move and one stretch, with foot care after them", () => {
+test("short lift sessions get one warm-up move and one stretch", () => {
   for (const d of [0, 2, 4]) {
-    const off = buildSessionFor(day(0, d), START, { short: true, settings: { ...ME, footCare: false } });
-    assert.equal(off.warmup.length, 1, off.templateName);
-    assert.equal(off.cooldown.length, 1, off.templateName);
-    const on = buildSessionFor(day(0, d), START, { short: true });
-    assert.equal(on.warmup.length, 3);
-    assert.equal(on.cooldown.length, 3);
-    assert.ok(!/calf|ankle|plantar/i.test(on.warmup[0].text));
-    assert.match(on.warmup[2].text, /calf raises/i);
-    assert.match(on.cooldown[1].text, /plantar/i);
+    const s = buildSessionFor(day(0, d), START, { short: true });
+    assert.equal(s.warmup.length, 1, s.templateName);
+    assert.equal(s.cooldown.length, 1, s.templateName);
   }
   // other day types keep the plain heading
   for (const d of [1, 3, 5, 6]) assert.equal(buildSessionFor(day(0, d), START).cooldownTitle, undefined);
@@ -208,7 +191,7 @@ test("warm-up and stretch links point at the ACE library", () => {
 });
 
 test("lifting sessions fit the minutes setting; short versions fit in 20", () => {
-  for (const [minutes, lo, hi] of [[30, 20, 31], [45, 28, 45]]) {
+  for (const [minutes, lo, hi] of [[30, 20, 31], [45, 24, 45]]) {
     const settings = { ...ME, minutes };
     for (let w = 0; w < 12; w++) {
       for (const d of [0, 2, 4]) {
@@ -242,21 +225,25 @@ test("weekly sets per pattern stay between 6 and 13 (the range the Why tab state
   }
 });
 
-test("foot care is an add-on: on puts it in every session, off removes every trace", () => {
-  const feet = /calf|ankle|plantar/i;
+test("no foot-care text in any session, and an old footCare setting is dropped", () => {
+  const feet = /calf raises|ankle|plantar|foot/i;
   for (let i = 0; i < 42; i++) {
-    for (const opts of [{}, { short: true }]) {
-      const off = buildSessionFor(addDays(monday, i), START, { ...opts, settings: { ...ME, footCare: false } });
-      assert.ok(!feet.test(allText(off)), `${off.templateName}: ${allText(off)}`);
+    for (const opts of [{}, { short: true }, { length: 45 }]) {
+      const s = buildSessionFor(addDays(monday, i), START, { ...opts, settings: { ...ME, footCare: true } });
+      assert.ok(!feet.test(allText(s)), `${s.templateName}: ${allText(s)}`);
     }
   }
-  assert.equal(DEFAULT_SETTINGS.footCare, false);
+  assert.ok(!("footCare" in DEFAULT_SETTINGS));
+  assert.ok(!("footCare" in withDefaults({ footCare: true, minutes: 45 })));
+  assert.equal(withDefaults({ footCare: true, minutes: 45 }).minutes, 45);
+  assert.ok(!EXERCISES.some((e) => /plantar|towel/i.test(e.name)));
+  assert.ok(!/plantar|foot care|footCare/i.test(JSON.stringify(PRINCIPLES)));
 });
 
 test("the plan only uses equipment the person has", () => {
   const kits = [["dumbbell", "bench"], ["kettlebell"], ["band", "pull_up_bar"], []];
   for (const equipment of kits) {
-    const settings = { minutes: 30, footCare: true, equipment };
+    const settings = { minutes: 30, equipment };
     for (let i = 0; i < 84; i++) {
       for (const opts of [{}, { short: true }, { reroll: 1 }]) {
         const s = buildSessionFor(addDays(monday, i), START, { ...opts, settings });
@@ -271,7 +258,7 @@ test("the plan only uses equipment the person has", () => {
     }
   }
   // dumbbells and a bench are enough for a real main lift on all three lifting days
-  const db = { minutes: 30, footCare: false, equipment: ["dumbbell", "bench"] };
+  const db = { minutes: 30, equipment: ["dumbbell", "bench"] };
   for (const d of [0, 2, 4]) {
     const s = buildSessionFor(day(0, d), START, { settings: db });
     assert.equal(s.exercises[0].loadType, "dumbbell", s.exercises[0].name);
@@ -414,7 +401,7 @@ test("streak counts back from today, and forgives an empty today", () => {
 });
 
 test("weekly totals: hard minutes count double, yoga is not aerobic, strength days need real lifting", () => {
-  const lift = { ...buildSessionFor(day(0, 0), START, { settings: { ...ME, minutes: 45 } }) };
+  const lift = { ...buildSessionFor(day(0, 0), START, { settings: { ...ME, minutes: 45 } }), activity: undefined };
   lift.exercises = lift.exercises.map((e) => ({ ...e, sets: e.sets.map((x) => ({ ...x, weight: "50", done: true })) }));
   const s = [
     lift,

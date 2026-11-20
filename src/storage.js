@@ -4,7 +4,7 @@ export const KEYS = {
   sessions: "wapp_sessions",       // completed entries (same key as version 1, so old history carries over)
   active: "wapp_active",           // session in progress
   programStart: "move_program_start", // Monday the program began, YYYY-MM-DD
-  settings: "move_settings",       // minutes per day, equipment, bar weight, foot care
+  settings: "move_settings",       // minutes per day, equipment, bar weight, outdoor options
   swaps: "move_swaps",             // standing swaps: { originalExerciseId: replacementId }
   rerolls: "move_rerolls",         // Sunday surprise rerolls: { dayKey: count }
   lengths: "move_lengths",         // per-day length picks: { dayKey: "short" | 30 | 45 }

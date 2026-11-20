@@ -85,18 +85,6 @@ export const SOURCES = {
     journal: "PeerJ",
     doi: "10.7717/peerj.16777",
   },
-  rathleff2014: {
-    cite: "Rathleff et al., 2014",
-    title: "High-load strength training improves outcome in patients with plantar fasciitis: A randomized controlled trial with 12-month follow-up",
-    journal: "Scandinavian Journal of Medicine & Science in Sports",
-    doi: "10.1111/sms.12313",
-  },
-  koc2023: {
-    cite: "Koc et al., 2023",
-    title: "Heel Pain - Plantar Fasciitis: Revision 2023 (clinical practice guideline)",
-    journal: "Journal of Orthopaedic & Sports Physical Therapy",
-    doi: "10.2519/jospt.2023.0303",
-  },
   afonso2021: {
     cite: "Afonso et al., 2021",
     title: "Strength Training versus Stretching for Improving Range of Motion: A Systematic Review and Meta-Analysis",
@@ -229,7 +217,7 @@ export const PRINCIPLES = [
   {
     id: "labels",
     title: "The day names are labels for which lifts come first",
-    rule: "Push, Pull, and Hinge are labels for which lifts come first on a given day. There is no study behind the names or the order. What the plan is built to hit is the weekly totals: strength work on 2 or more days, 150 minutes of aerobic activity, and flexibility work on 2 or more days.",
+    rule: "Push, Pull, and Hinge are labels for which lifts come first on a given day. There is no study behind the names or the order. What the plan is built to hit is the weekly totals: strength work on 2 or more days, 150 minutes of aerobic activity, and flexibility work on 2 or more days. Nothing in the app involves jumping, for anyone.",
     evidence: "A 2024 meta-analysis of 14 trials (392 people) found that split routines and full-body routines produced the same strength gains and the same muscle growth when the weekly number of sets was equal. The World Health Organization and the American College of Sports Medicine set their guidance as weekly totals.",
     limits: "The meta-analysis compared training splits in general. It did not test this particular week, and it says nothing about cardio or mobility days.",
     sources: ["ramoscampo2024", "bull2020", "garber2011"],
@@ -313,14 +301,6 @@ export const PRINCIPLES = [
     evidence: "A review of time-efficient training advises limiting the warm-up to lighter sets of the exercise you are about to do. Static holds of 60 seconds or less per muscle before lifting trim strength by only 1 to 2%, and longer holds by 4 to 7.5%, while dynamic moves give small-to-moderate improvements. A meta-analysis of 10 trials found that stretching after exercise did not reduce soreness or speed strength recovery compared with rest, and a narrative review found that active cool-downs do not improve next-day performance or prevent injuries. A 2025 expert consensus reached the same conclusion on recovery.",
     limits: "Most of these studies are small and enrolled young, trained men. Which moves to pair with each lift was a judgment call, and no trial tested this set.",
     sources: ["iversen2021", "chaabene2019", "behm2015", "afonso2021recovery", "vanhooren2018", "warneke2025"],
-  },
-  {
-    id: "feet",
-    title: "Foot care add-on, and no jumping",
-    rule: "With foot care switched on, every session includes calf raises and an ankle mobility drill, and ends with a plantar fascia stretch and a calf stretch. Nothing in the app involves jumping, for anyone.",
-    evidence: "In a randomized trial of people with plantar fasciitis, slow heel raises done every second day gave better self-reported foot function at 3 months than plantar-specific stretching. The groups did not differ at 1, 6, or 12 months.",
-    limits: "This is an optional add-on, switched on in Settings. The trial used a heavier, progressive protocol than the 2 sets of 15 here. This app is a training plan and does not replace care from a clinician. The 2023 physical therapy guideline for heel pain is linked for reference.",
-    sources: ["rathleff2014", "koc2023"],
   },
   {
     id: "mobility",

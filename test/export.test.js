@@ -6,7 +6,7 @@ import { addDays, fromKey, toKey } from "../src/engine/dates.js";
 import { exportCsvs, parseCsv, SESSION_COLUMNS, SET_COLUMNS, csvCell } from "../src/engine/export.js";
 
 const START = "2026-11-09";
-const ME = { minutes: 30, footCare: true, barWeight: 35, equipment: EQUIPMENT.map((e) => e.id) };
+const ME = { minutes: 30, barWeight: 35, equipment: EQUIPMENT.map((e) => e.id) };
 const monday = fromKey(START);
 
 function logged(i) {

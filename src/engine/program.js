@@ -12,9 +12,9 @@
 // Sat Mobility · Sun Surprise.
 //
 // Settings (see DEFAULT_SETTINGS) adapt the plan to the person: minutes per
-// day, the equipment they own, bar weight, outdoor options (hikes, summer
-// swims), and an optional foot-care add-on. Each day can also be built at a
-// different length (Short, 30, or 45) than the Settings default.
+// day, the equipment they own, bar weight, and outdoor options (hikes, summer
+// swims). Each day can also be built at a different length (Short, 30, or 45)
+// than the Settings default.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { EXERCISES, byId, loadTypeOf, repUnitOf } from "../exercises.js";
@@ -404,7 +404,6 @@ export const EQUIPMENT = [
 
 export const DEFAULT_SETTINGS = {
   minutes: 30,          // 30 or 45 per day
-  footCare: false,      // calf raises, an ankle drill, and foot stretches in every session
   barWeight: 45,        // lb
   equipment: EQUIPMENT.map((e) => e.id),
   hikes: false,         // Outdoor options: suggest hikes
@@ -415,7 +414,11 @@ export const DEFAULT_SETTINGS = {
 /** The lengths a single day can be built at. Short is about 10 to 20 minutes. */
 export const LENGTHS = ["short", 30, 45];
 
-export const withDefaults = (settings) => ({ ...DEFAULT_SETTINGS, ...(settings || {}) });
+/** Fill in defaults. The foot-care setting from versions 2.0 and 2.1 is dropped here, so the next save removes it. */
+export const withDefaults = (settings) => {
+  const { footCare, ...rest } = settings || {};
+  return { ...DEFAULT_SETTINGS, ...rest };
+};
 
 const ALWAYS_AVAILABLE = new Set(["bodyweight", "step", "foam_roller"]);
 
@@ -455,24 +458,6 @@ const MAIN_FALLBACKS = {
 };
 
 // ─── Shared pieces ────────────────────────────────────────────────────────────
-
-const ANKLE = [
-  { text: "Ankle circles: 10 each direction" },
-  { text: "Banded ankle dorsiflexion: 12 each side", needs: "band" },
-  { text: "Wall ankle stretch, knee to wall: 30 sec each side" },
-];
-const CALF_RAISES = "Calf raises on a step: 2 × 15, slow";
-const FEET_COOLDOWN = [
-  "Plantar fascia stretch: 60 sec each foot",
-  "Calf stretch: 2 × 30 sec each side",
-];
-
-/** The foot-care add-on: [warm-up items], [cool-down items]. Empty when it is switched off. */
-function footCare(settings, i) {
-  if (!settings.footCare) return { before: [], after: [] };
-  const drills = ANKLE.filter((a) => !a.needs || settings.equipment.includes(a.needs));
-  return { before: [pick(drills, i).text, CALF_RAISES], after: FEET_COOLDOWN };
-}
 
 // Apple Watch workout type to start alongside each kind of session.
 // A web app cannot read Apple Health, so the watch records on its own.
@@ -616,7 +601,6 @@ function buildLift(date, programStart, plan, { short = false, settings }) {
   const s = baseSession(date, programStart, plan);
   const compact = settings.minutes < 45;
   const gear = settings.equipment;
-  const feet = footCare(settings, c.weekIndex + dayIndex(date));
 
   let mainSpec = plan.key === "hinge" ? { ...format.main, ...HINGE_MAIN[format.id] } : { ...format.main };
   if (compact) mainSpec.sets = Math.min(mainSpec.sets, format.id === "density" ? 3 : 4);
@@ -641,9 +625,9 @@ function buildLift(date, programStart, plan, { short = false, settings }) {
   // of the main lift are the real warm-up, so the checklist stays short.
   const prepFrom = (lifts) => {
     const { warm, stretch } = liftPrep(lifts.filter(Boolean).map((e) => e.exerciseId), gear);
-    s.warmup = check([...warm, ...feet.before]);
+    s.warmup = check(warm);
     // The stretch is optional: it does not count toward the time estimate or progress.
-    s.cooldown = [...check(stretch).map((i) => ({ ...i, optional: true })), ...check(feet.after)];
+    s.cooldown = check(stretch).map((i) => ({ ...i, optional: true }));
   };
 
   if (short) {
@@ -699,7 +683,6 @@ function buildCore(date, programStart, plan, { short = false, settings }) {
   const format = CORE_FORMATS[c.formatIndex];
   const cardio = CARDIO_TYPES[c.weekIndex % CARDIO_TYPES.length];
   const s = baseSession(date, programStart, plan);
-  const feet = footCare(settings, c.weekIndex + 1);
   const rower = settings.equipment.includes("rower");
   const length = short ? "short" : settings.minutes;
   const minutes = CARDIO_MINUTES[length] ?? CARDIO_MINUTES[30];
@@ -709,8 +692,7 @@ function buildCore(date, programStart, plan, { short = false, settings }) {
   s.cardioTitle = rower ? `Cardio: ${cardio.name.toLowerCase()} on the rower` : `Cardio: brisk walk, ${cardio.name.toLowerCase()}`;
   s.cardio = check(cardio.build(rower ? "row" : "walk", minutes));
   s.activity = { type: rower ? "row" : "walk", minutes, hard: cardio.hard, options: [rower ? "row" : "walk"] };
-  // The cardio is the warm-up, so the checklist before the core work is foot care only.
-  s.warmup = check(feet.before);
+  // The cardio is the warm-up, so there is no separate checklist before the core work.
 
   const group = format.style === "straight" ? null : format.style === "emom" ? "On the minute" : "Circuit";
   const rounds = short || settings.minutes < 45 ? 2 : 3;
@@ -724,7 +706,6 @@ function buildCore(date, programStart, plan, { short = false, settings }) {
     return makeExercise(id, "core", { sets: rounds, rest: format.style === "emom" ? 25 : format.rest }, group);
   }).filter(Boolean);
   if (short) { s.short = true; s.templateName = `${plan.name} (short)`; }
-  s.cooldown = check(feet.after);
   s.estMinutes = estimateMinutes(s);
   return s;
 }
@@ -772,7 +753,6 @@ function buildMobility(date, programStart, plan, { short = false, settings }) {
   const isSat = dayIndex(date) === 5;
   const flow = pick(MOBILITY_FLOWS, c.weekIndex * 2 + (isSat ? 1 : 0));
   const menu = cardioMenu(date, settings);
-  const feet = footCare(settings, c.weekIndex + (isSat ? 1 : 0));
   const s = baseSession(date, programStart, plan);
   s.format = { id: flow.id, name: flow.name, tagline: "Hold each stretch to tightness, never pain." };
   s.why = ["mobility", "who"];
@@ -782,8 +762,8 @@ function buildMobility(date, programStart, plan, { short = false, settings }) {
     s.templateName = `${plan.name} (short)`;
     s.cardio = check(["Brisk walk: 10 min, quick enough that talking takes a little effort"]);
     s.activity = { type: "walk", minutes: 10, hard: false, options: menu };
-    s.warmup = check(settings.footCare ? [...feet.before, ...feet.after] : [MOVES.catCow, MOVES.childsPose]);
-    s.warmupTitle = settings.footCare ? "Feet" : "Two stretches";
+    s.warmup = check([MOVES.catCow, MOVES.childsPose]);
+    s.warmupTitle = "Two stretches";
     s.estMinutes = estimateMinutes(s);
     return s;
   }
@@ -791,7 +771,7 @@ function buildMobility(date, programStart, plan, { short = false, settings }) {
   const items = flow.id === "class"
     ? [{ text: `Guided mobility or yoga class: about ${classMin} min (Bend and Peloton both work)`, minutes: classMin }]
     : flow.items.map((m) => (m === MOVES.latStretch && !settings.equipment.includes("bench") ? MOVES.latStretchFloor : m));
-  s.warmup = check([...items, ...feet.before, ...feet.after]);
+  s.warmup = check(items);
   s.warmupTitle = flow.id === "class" ? "Class" : `Stretch: ${flow.name}`;
   if (flow.id !== "class") {
     s.flowNote = "Prefer a guided version? A mobility or yoga class (Bend and Peloton both work) is an equal swap for the stretches.";
@@ -815,14 +795,13 @@ function buildSurprise(date, programStart, plan, { short = false, reroll = 0, se
     .filter((id) => outdoorOk(SURPRISES[id].activity?.type, settings));
   const id = pick(menu, c.weekIndex + reroll);
   const def = SURPRISES[id];
-  const feet = footCare(settings, c.weekIndex + 2);
   const s = baseSession(date, programStart, plan);
   s.surpriseId = id;
   s.templateName = `Surprise: ${def.name}`;
   s.emoji = def.emoji;
   s.format = { id, name: def.name, tagline: def.tagline };
   s.why = def.circuit ? ["variety", "who"] : ["who", "cardio"];
-  s.warmup = check([...(def.circuit && !short ? [MOVES.catCow, MOVES.bodyweightSquat] : []), ...feet.before]);
+  s.warmup = check(def.circuit && !short ? [MOVES.catCow, MOVES.bodyweightSquat] : []);
   if (short) {
     s.short = true;
     s.templateName = "Surprise (short)";
@@ -832,12 +811,11 @@ function buildSurprise(date, programStart, plan, { short = false, reroll = 0, se
       makeExercise(exId, "accessory", { sets: def.circuit.rounds, reps: 10, rir: 2, rest: def.circuit.rest }, "Circuit")
     );
   } else {
-    // A longer day gets a longer walk, swim, or class; the foot-care items take the last few minutes.
+    // A longer day gets a longer walk, swim, or class.
     const minutes = def.fixed ? def.activity.minutes : Math.min(def.activity.minutes + Math.max(0, settings.minutes - 30), settings.minutes - 5);
     s.main = check(def.checklist(minutes));
     s.activity = { ...def.activity, minutes, options: [def.activity.type] };
   }
-  s.cooldown = check(feet.after);
   s.estMinutes = estimateMinutes(s);
   return s;
 }
@@ -846,7 +824,7 @@ const BUILDERS = { lift: buildLift, core: buildCore, mobility: buildMobility, su
 
 /**
  * The session planned for a date.
- * options.settings -> the person's settings (minutes, equipment, outdoor options, foot care)
+ * options.settings -> the person's settings (minutes, equipment, outdoor options)
  * options.length   -> "short", 30, or 45 for this one day; defaults to settings.minutes
  * options.short    -> the same as length "short" (kept for older callers)
  * options.reroll   -> Sunday only: deal a different surprise

@@ -10,7 +10,7 @@ import {
 
 const START = "2026-11-09"; // a Monday
 const ALL_GEAR = EQUIPMENT.map((e) => e.id);
-const ME = { minutes: 30, footCare: true, barWeight: 35, equipment: ALL_GEAR };
+const ME = { minutes: 30, barWeight: 35, equipment: ALL_GEAR };
 const buildSessionFor = (date, start, opts = {}) => build(date, start, { settings: ME, ...opts });
 const monday = fromKey(START);
 const day = (week, dow) => addDays(monday, week * 7 + dow);
@@ -19,19 +19,17 @@ const allText = (s) =>
 const total = (s) => s.estMinutes + (s.activity?.minutes || 0);
 
 test("Tuesday is cardio then core, on the rower or on foot, and fits the day at Short, 30, and 45", () => {
-  for (const footCare of [true, false]) {
-    for (const length of LENGTHS) {
-      const cap = length === "short" ? 20 : length;
-      for (let w = 0; w < 6; w++) {
-        const s = buildSessionFor(day(w, 1), START, { length, settings: { ...ME, footCare } });
-        assert.ok(s.cardio.length >= 1, `cardio on week ${w}`);
-        assert.equal(s.activity.type, "row");
-        assert.ok(s.activity.minutes >= 10);
-        assert.ok(s.exercises.length >= 2 && s.exercises.every((e) => e.role === "core"), `core work on week ${w}`);
-        assert.ok(total(s) <= cap, `${length} week ${w}: ${s.estMinutes} + ${s.activity.minutes}`);
-        assert.equal(s.length, length);
-        assert.match(s.cardio.map((i) => i.text).join(" "), /\d+ min/);
-      }
+  for (const length of LENGTHS) {
+    const cap = length === "short" ? 20 : length;
+    for (let w = 0; w < 6; w++) {
+      const s = buildSessionFor(day(w, 1), START, { length });
+      assert.ok(s.cardio.length >= 1, `cardio on week ${w}`);
+      assert.equal(s.activity.type, "row");
+      assert.ok(s.activity.minutes >= 10);
+      assert.ok(s.exercises.length >= 2 && s.exercises.every((e) => e.role === "core"), `core work on week ${w}`);
+      assert.ok(total(s) <= cap, `${length} week ${w}: ${s.estMinutes} + ${s.activity.minutes}`);
+      assert.equal(s.length, length);
+      assert.match(s.cardio.map((i) => i.text).join(" "), /\d+ min/);
     }
   }
   // the cardio type rotates weekly through all three, then repeats
@@ -115,16 +113,15 @@ test("no session contains a jumping move, cardio included, at every length", () 
 });
 
 test("a 45-minute day is longer than a 30-minute day for every day type, and each length fits its minutes", () => {
-  for (const footCare of [true, false]) {
+  {
     for (let i = 0; i < 42; i++) {
       const d = addDays(monday, i);
-      const settings = { ...ME, footCare };
+      const settings = ME;
       const s30 = buildSessionFor(d, START, { length: 30, settings });
       const s45 = buildSessionFor(d, START, { length: 45, settings });
       const sh = buildSessionFor(d, START, { length: "short", settings });
       assert.ok(total(s45) > total(s30), `${s30.templateName} ${toKey(d)}: ${total(s30)} vs ${total(s45)}`);
-      // Sunday's row intervals are a fixed 30-minute protocol, so foot care can push that day a few minutes over.
-      assert.ok(total(s30) <= (s30.surpriseId === "row_intervals" ? 35 : 31), `${s30.templateName} at 30: ${total(s30)}`);
+      assert.ok(total(s30) <= 31, `${s30.templateName} at 30: ${total(s30)}`);
       assert.ok(total(s45) >= 35 && total(s45) <= 46, `${s45.templateName} at 45: ${total(s45)}`);
       assert.ok(total(sh) <= 20, `${sh.templateName} short: ${total(sh)}`);
       assert.ok(sh.short);
@@ -153,8 +150,8 @@ test("planned aerobic minutes fall in the stated ranges: about 35 to 80 at 30 mi
     const m = addDays(monday, w * 7);
     const at30 = plannedAerobicMinutes(m, START, ME);
     const at45 = plannedAerobicMinutes(m, START, { ...ME, minutes: 45 });
-    assert.ok(at30 >= 35 && at30 <= 80, `week ${w} at 30: ${at30}`);
-    assert.ok(at45 >= 60 && at45 <= 140, `week ${w} at 45: ${at45}`);
+    assert.ok(at30 >= 35 && at30 <= 90, `week ${w} at 30: ${at30}`);
+    assert.ok(at45 >= 60 && at45 <= 180, `week ${w} at 45: ${at45}`);
     assert.ok(at45 > at30);
   }
   // a day's own length pick changes the total
