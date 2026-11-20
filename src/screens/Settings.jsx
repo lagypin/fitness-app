@@ -13,7 +13,7 @@ export default function SettingsForm({ settings, firstRun = false, onSave }) {
       {firstRun && (
         <div className="card">
           <h2 className="plan-title">Set up your plan</h2>
-          <p className="plan-meta">A few quick questions. You can change any of them later on the Week tab.</p>
+          <p className="plan-meta">A few quick questions. You can change any of them later under More.</p>
         </div>
       )}
 

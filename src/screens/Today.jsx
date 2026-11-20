@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { ACTIVITIES, DAY_PLAN, LENGTHS, activityMenu } from "../engine/program.js";
 import { addDays, dayIndex, DAY_NAMES, fromKey, mondayOf, toKey } from "../engine/dates.js";
-import { principleById } from "../engine/evidence.js";
-import { AEROBIC_TARGET_MIN, STRENGTH_TARGET_DAYS } from "../engine/stats.js";
-import { ActivityPicker, Meter, Modal } from "../ui.jsx";
+import { ActivityPicker, Modal, StatusLine } from "../ui.jsx";
 
 const LENGTH_LABEL = { short: "Short", 30: "30 min", 45: "45 min" };
 
@@ -27,6 +25,12 @@ function PlanList({ plan }) {
     if (plan.exercises.length) rows.push(<li key="coreg" className="pl-group">{plan.exercises[0].group || "Core"}</li>);
     lastGroup = plan.exercises[0]?.group || null;
   }
+  if (plan.kind === "lift" && plan.warmup?.length) {
+    rows.push(<li key="wg" className="pl-group">Warm-up</li>);
+    plan.warmup.forEach((item, i) => rows.push(<li key={`w${i}`}><span className="pl-name">{item.text.split(",")[0]}</span></li>));
+    rows.push(<li key="ramp"><span className="pl-name">Lighter sets of the lifts</span></li>);
+    rows.push(<li key="lg" className="pl-group">Lifts</li>);
+  }
   plan.exercises.forEach((ex, i) => {
     if (ex.group && ex.group !== lastGroup) rows.push(<li key={`g${i}`} className="pl-group">{ex.group}</li>);
     lastGroup = ex.group || null;
@@ -37,6 +41,10 @@ function PlanList({ plan }) {
       </li>
     );
   });
+  if (plan.kind === "lift" && plan.cooldown?.length) {
+    rows.push(<li key="cdg" className="pl-group">{plan.cooldownTitle || "Cool-down"}</li>);
+    plan.cooldown.forEach((item, i) => rows.push(<li key={`cd${i}`}><span className="pl-name">{item.text.split(":")[0]}</span><span className="pl-dose">{item.text.split(": ")[1] || ""}</span></li>));
+  }
   if (plan.activity && !plan.cardio?.length) {
     const a = ACTIVITIES[plan.activity.type];
     rows.push(<li key="act"><span className="pl-name"><span aria-hidden="true">{a.emoji} </span>{a.label}</span><span className="pl-dose">{plan.activity.minutes} min</span></li>);
@@ -58,10 +66,9 @@ function QuickLog({ onSave, onClose, initialType, activities }) {
 }
 
 export default function TodayScreen({
-  today, selectedKey, onSelect, plan, length, onLength, settings, planDone, week, doneKeys, activeSession,
-  onResume, onStart, onQuickLog, onOpenWhy, status,
+  today, selectedKey, onSelect, plan, length, onLength, settings, planDone, doneKeys, activeSession,
+  onResume, onStart, onQuickLog, status,
 }) {
-  const [showWhy, setShowWhy] = useState(false);
   const [quick, setQuick] = useState(null);
   const monday = mondayOf(today);
   const todayKey = toKey(today);
@@ -70,10 +77,11 @@ export default function TodayScreen({
   const dayPlan = DAY_PLAN[dayIndex(selected)];
   const total = plan.estMinutes + (plan.activity?.minutes || 0);
   const activities = activityMenu(settings);
+  const open = plan.kind === "open";
 
   return (
     <>
-      {status && <p className="status" role="status">{status}</p>}
+      <StatusLine status={status} />
 
       {activeSession && (
         <button type="button" className="active-banner" onClick={onResume}>
@@ -105,7 +113,7 @@ export default function TodayScreen({
         })}
       </div>
 
-      {plan.kind === "open" ? (
+      {open ? (
         <section className="card" aria-label="Open day">
           <div className="row wrap" style={{ marginBottom: 8 }}>
             {doneKeys.has(selectedKey) && <span className="tag green">✓ Moved</span>}
@@ -120,71 +128,53 @@ export default function TodayScreen({
           )}
         </section>
       ) : (
-      <section className="card" aria-label="Planned session">
-        <div className="row wrap" style={{ marginBottom: 8 }}>
-          {plan.format && <span className="tag">{plan.kind === "lift" ? `${plan.format.name} week` : plan.format.name}</span>}
-          {planDone && <span className="tag green">✓ Done</span>}
-          {!isToday && <span className="tag amber">{DAY_NAMES[dayIndex(selected)]}'s plan</span>}
-        </div>
-        <h2 className="plan-title"><span aria-hidden="true">{plan.emoji} </span>{plan.templateName}</h2>
-        <p className="plan-meta">
-          About {total} min{plan.format?.tagline ? ` · ${plan.format.tagline}` : ""}
-        </p>
-        {plan.blockNote && <p className="plan-meta">{plan.blockNote}</p>}
-
-        <h3 className="label" id="length-pick" style={{ marginTop: 10 }}>Length for this day</h3>
-        <div className="chips" role="group" aria-labelledby="length-pick" style={{ marginBottom: 8 }}>
-          {LENGTHS.map((l) => (
-            <button key={l} type="button" className="chip" aria-pressed={length === l} onClick={() => onLength(l)}>
-              {LENGTH_LABEL[l]}{l === settings.minutes ? " (default)" : ""}
-            </button>
-          ))}
-        </div>
-
-        <PlanList plan={plan} />
-
-        {activeSession ? (
-          <div className="stack">
-            <button type="button" className="btn-primary" onClick={onResume}>Resume {activeSession.templateName}</button>
-            <p className="muted">Finish or discard the session in progress before starting another.</p>
+        <section className="card" aria-label="Planned session">
+          <div className="row wrap" style={{ marginBottom: 8 }}>
+            {plan.format && <span className="tag">{plan.kind === "lift" ? `${plan.format.name} week` : plan.format.name}</span>}
+            {planDone && <span className="tag green">✓ Done</span>}
+            {!isToday && <span className="tag amber">{DAY_NAMES[dayIndex(selected)]}'s plan</span>}
           </div>
-        ) : (
-          <div className="stack">
-            <button type="button" className="btn-primary" onClick={onStart}>
-              {planDone ? "Do it again" : isToday ? "Start" : `Do ${dayPlan.name} today`}
-            </button>
-          </div>
-        )}
+          <h2 className="plan-title"><span aria-hidden="true">{plan.emoji} </span>{plan.templateName}</h2>
+          <p className="plan-meta">
+            About {total} min{plan.format?.tagline ? ` · ${plan.format.tagline}` : ""}
+          </p>
+          {plan.blockNote && <p className="plan-meta">{plan.blockNote}</p>}
 
-        <button type="button" className="btn-link" aria-expanded={showWhy} onClick={() => setShowWhy(!showWhy)}>
-          {showWhy ? "Hide the reasons" : "Why this workout?"}
-        </button>
-        {showWhy && (
-          <div className="why-box">
-            {(plan.why || []).map((id) => {
-              const p = principleById(id);
-              return p ? <p key={id}><strong>{p.title}.</strong> {p.rule}</p> : null;
-            })}
-            <button type="button" className="btn-link" onClick={onOpenWhy}>Read the research behind each rule</button>
+          <h3 className="label" id="length-pick" style={{ marginTop: 10 }}>Length for this day</h3>
+          <div className="chips" role="group" aria-labelledby="length-pick" style={{ marginBottom: 8 }}>
+            {LENGTHS.map((l) => (
+              <button key={l} type="button" className="chip" aria-pressed={length === l} onClick={() => onLength(l)}>
+                {LENGTH_LABEL[l]}{l === settings.minutes ? " (default)" : ""}
+              </button>
+            ))}
           </div>
-        )}
-      </section>
+
+          <PlanList plan={plan} />
+
+          {activeSession ? (
+            <div className="stack">
+              <button type="button" className="btn-primary" onClick={onResume}>Resume {activeSession.templateName}</button>
+              <p className="muted">Finish or discard the session in progress before starting another.</p>
+            </div>
+          ) : (
+            <div className="stack">
+              <button type="button" className="btn-primary" onClick={onStart}>
+                {planDone ? "Do it again" : isToday ? "Start" : `Do ${dayPlan.name} today`}
+              </button>
+            </div>
+          )}
+
+          <a className="btn-link" href={`/why${plan.why?.length ? `#${plan.why[0]}` : ""}`}>Why this workout?</a>
+        </section>
       )}
 
-      <h2 className="label" id="quick-log">{plan.kind === "open" ? "Log your movement" : "Log other movement"}</h2>
+      <h2 className="label" id="quick-log">{open ? "Log your movement" : "Log other movement"}</h2>
       <div className="chips" role="group" aria-labelledby="quick-log">
         {Object.entries(activities).map(([type, a]) => (
           <button key={type} type="button" className="chip" onClick={() => setQuick(type)}>
             <span aria-hidden="true">{a.emoji} </span>{a.label}
           </button>
         ))}
-      </div>
-
-      <h2 className="label">This week</h2>
-      <div className="card">
-        <Meter label="Aerobic minutes" value={week.aerobicMinutes} target={AEROBIC_TARGET_MIN} unit=" min" />
-        <Meter label="Strength days" value={week.strengthDays} target={STRENGTH_TARGET_DAYS} />
-        <Meter label="Days moved" value={week.activeDays} target={7} />
       </div>
 
       {quick && (

@@ -10,12 +10,11 @@ import TodayScreen from "./screens/Today.jsx";
 import SessionScreen from "./screens/Session.jsx";
 import WeekScreen from "./screens/Week.jsx";
 import LogScreen from "./screens/Log.jsx";
-import LibraryScreen from "./screens/Library.jsx";
-import WhyScreen from "./screens/Why.jsx";
+import MoreScreen from "./screens/More.jsx";
 import SettingsForm from "./screens/Settings.jsx";
 import { fmtDate } from "./ui.jsx";
 
-const TABS = [["today", "Today"], ["week", "Week"], ["log", "Log"], ["library", "Library"], ["why", "Why"]];
+const TABS = [["today", "Today"], ["week", "Week"], ["log", "Log"], ["more", "More"]];
 
 dropRetiredKeys();
 
@@ -38,7 +37,7 @@ export default function App() {
   const [swaps, setSwaps] = useState(() => LS.get(KEYS.swaps, {}));
   const [lengths, setLengths] = useState(() => LS.get(KEYS.lengths, {}));
   const [programStart] = useState(initialProgramStart);
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(null); // { text, emoji? }
 
   // Roll over to the new day when the app comes back to the foreground.
   useEffect(() => {
@@ -57,6 +56,7 @@ export default function App() {
   const saveSessions = (next) => { setSessions(next); LS.set(KEYS.sessions, next); };
   const saveActive = (next) => { setActive(next); LS.set(KEYS.active, next); };
   const updateActive = (fn) => setActive((prev) => { const next = fn(prev); LS.set(KEYS.active, next); return next; });
+  const say = (text, emoji) => setStatus(text ? { text, emoji } : null);
 
   // The length picked for a day on the Today tab, or the Settings default.
   const lengthFor = (dayKey) => lengths[dayKey] ?? settings.minutes;
@@ -83,7 +83,11 @@ export default function App() {
   function start(p) {
     const now = new Date();
     saveActive({ ...p, id: uid(), planDayKey: p.dayKey, dayKey: toKey(now), date: now.toISOString(), startedAt: now.getTime() });
-    setStatus("");
+    say(null);
+    setShowSession(true);
+  }
+
+  function resume() {
     setShowSession(true);
   }
 
@@ -97,7 +101,7 @@ export default function App() {
     saveActive(null);
     setShowSession(false);
     setTab("today");
-    setStatus(`Saved: ${active.templateName}. Nice work.`);
+    say(`Saved: ${active.templateName}. Nice work.`);
   }
 
   function quickLog(activity) {
@@ -107,7 +111,7 @@ export default function App() {
       id: uid(), kind: "activity", templateId: activity.type, templateName: a.label, emoji: a.emoji,
       date: now.toISOString(), dayKey: toKey(now), exercises: [], activity, durationMin: activity.minutes, completed: true,
     }]);
-    setStatus(`Logged: ${a.label}, ${activity.minutes} min.`);
+    say(`${a.label}, ${activity.minutes} min logged.`);
   }
 
   function swap(exIndex, newId, always) {
@@ -133,8 +137,9 @@ export default function App() {
   }
 
   function saveSettings(next) {
-    setSettings(next); LS.set(KEYS.settings, next);
-    setStatus("Plan updated.");
+    const clean = withDefaults(next); // drops settings this version no longer keeps
+    setSettings(clean); LS.set(KEYS.settings, clean);
+    say("Plan updated.");
   }
 
   function setLength(length) {
@@ -172,7 +177,7 @@ export default function App() {
           onSwap={swap}
           onComplete={complete}
           onExit={() => setShowSession(false)}
-          onDiscard={() => { saveActive(null); setShowSession(false); setStatus("Session discarded."); }}
+          onDiscard={() => { saveActive(null); setShowSession(false); say("Session discarded."); }}
         />
       </div>
     );
@@ -210,23 +215,25 @@ export default function App() {
           <TodayScreen
             today={today} selectedKey={selectedKey} onSelect={setSelectedKey}
             plan={plan} length={lengthFor(selectedKey)} onLength={setLength} settings={settings}
-            planDone={planDone} week={week} doneKeys={doneKeys} status={status}
-            activeSession={active} onResume={() => setShowSession(true)}
+            planDone={planDone} doneKeys={doneKeys} status={status}
+            activeSession={active} onResume={resume}
             onStart={() => start(plan)}
-            onQuickLog={quickLog} onOpenWhy={() => setTab("why")}
+            onQuickLog={quickLog}
           />
         )}
         {!firstRun && tab === "week" && (
-          <WeekScreen today={today} sessions={sessions} programStart={programStart}
-            swaps={swaps} onRemoveSwap={removeSwap} settings={settings} onSaveSettings={saveSettings}
-            lengths={lengths} />
+          <WeekScreen today={today} sessions={sessions} programStart={programStart} settings={settings} lengths={lengths} />
         )}
         {!firstRun && tab === "log" && (
-          <LogScreen sessions={sessions} extras={{ programStart, swaps, settings }}
-            onReplace={saveSessions} onDelete={(id) => saveSessions(sessions.filter((s) => s.id !== id))} />
+          <LogScreen sessions={sessions} onDelete={(id) => saveSessions(sessions.filter((s) => s.id !== id))} />
         )}
-        {!firstRun && tab === "library" && <LibraryScreen />}
-        {!firstRun && tab === "why" && <WhyScreen />}
+        {!firstRun && tab === "more" && (
+          <MoreScreen
+            sessions={sessions} extras={{ programStart, swaps, settings }} onReplaceSessions={saveSessions}
+            settings={settings} onSaveSettings={saveSettings}
+            swaps={swaps} onRemoveSwap={removeSwap} status={status}
+          />
+        )}
       </main>
     </div>
   );

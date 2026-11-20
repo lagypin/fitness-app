@@ -1,27 +1,21 @@
 import { useState } from "react";
-import { byId } from "../exercises.js";
 import { clocks, FORMATS, plannedAerobicMinutes } from "../engine/program.js";
 import { addDays, DAY_NAMES, mondayOf, toKey } from "../engine/dates.js";
 import {
   AEROBIC_TARGET_MIN, STRENGTH_TARGET_DAYS, SETS_MINIMUM, SETS_GOAL, PATTERNS, weekSummary, weekRecap,
 } from "../engine/stats.js";
 import { Meter, fmtDate } from "../ui.jsx";
-import SettingsForm from "./Settings.jsx";
 
 const short = { month: "short", day: "numeric" };
 
-export default function WeekScreen({
-  today, sessions, programStart, swaps, onRemoveSwap, settings, onSaveSettings, lengths = {},
-}) {
+export default function WeekScreen({ today, sessions, programStart, settings, lengths = {} }) {
   const [offset, setOffset] = useState(0);
   const [shareStatus, setShareStatus] = useState("");
   const [recapText, setRecapText] = useState("");
-  const [editing, setEditing] = useState(false);
   const monday = addDays(mondayOf(today), offset * 7);
   const week = weekSummary(sessions, monday);
   const c = clocks(monday, programStart);
   const planned = plannedAerobicMinutes(monday, programStart, settings, { lengths });
-  const swapList = Object.entries(swaps).filter(([from, to]) => byId(from) && byId(to));
 
   async function share() {
     // Share sheet first, then the clipboard, then plain text to copy by hand.
@@ -45,15 +39,6 @@ export default function WeekScreen({
     }
   }
 
-  if (editing) {
-    return (
-      <>
-        <button type="button" className="btn-link" onClick={() => setEditing(false)}>Back to the week</button>
-        <SettingsForm settings={settings} onSave={(s) => { onSaveSettings(s); setEditing(false); }} />
-      </>
-    );
-  }
-
   return (
     <>
       <div className="row spread" style={{ marginBottom: 10 }}>
@@ -71,7 +56,7 @@ export default function WeekScreen({
         <Meter label="Aerobic minutes" value={week.aerobicMinutes} target={AEROBIC_TARGET_MIN} unit=" min"
           note={`WHO target for adults: ${AEROBIC_TARGET_MIN} moderate minutes a week. Hard minutes count double.`} />
         <p className="meter-note" style={{ marginTop: -4 }}>
-          Planned in this week's sessions: <strong>{planned} min</strong> of the {AEROBIC_TARGET_MIN}. The walks you log cover the rest.
+          Planned in this week's sessions: <strong>{planned} min</strong> of the {AEROBIC_TARGET_MIN} (Tuesday's cardio, plus any easy cardio on a 45-minute lift day). The walks you log cover the rest.
         </p>
         <Meter label="Strength days" value={week.strengthDays} target={STRENGTH_TARGET_DAYS}
           note="WHO target: muscle strengthening on 2 or more days a week." />
@@ -112,28 +97,6 @@ export default function WeekScreen({
           onFocus={(e) => e.target.select()} />
       )}
 
-      {swapList.length > 0 && (
-        <>
-          <h2 className="label">Standing swaps</h2>
-          <div className="card">
-            {swapList.map(([from, to]) => (
-              <div className="row spread" key={from} style={{ padding: "4px 0", fontSize: 14 }}>
-                <span>{byId(from).name}, swapped for <strong>{byId(to).name}</strong></span>
-                <button type="button" className="btn-small" onClick={() => onRemoveSwap(from)}>Undo<span className="sr-only"> the {byId(from).name} swap</span></button>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      <h2 className="label">Settings</h2>
-      <div className="card">
-        <p style={{ fontSize: 14 }}>
-          {settings.minutes} minutes a day · {settings.equipment.length} kinds of equipment
-          {settings.equipment.includes("barbell") ? ` · ${settings.barWeight} lb bar` : ""} · hikes {settings.hikes ? "on" : "off"} · summer swims {settings.swims ? "on" : "off"}
-        </p>
-        <button type="button" className="btn-secondary" style={{ marginTop: 10 }} onClick={() => setEditing(true)}>Change settings</button>
-      </div>
     </>
   );
 }

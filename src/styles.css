@@ -75,7 +75,7 @@ input[type=number] { -moz-appearance: textfield; }
 .btn-secondary:hover { background: var(--hot-pale); }
 .btn-small { min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1.5px solid var(--control); background: var(--surface); color: var(--text-mid); font-size: 13px; font-weight: 700; white-space: nowrap; }
 .btn-small:hover { color: var(--hot); background: var(--hot-pale); }
-.btn-link { background: none; border: none; color: var(--hot); font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; padding: 12px 4px; min-height: 44px; }
+.btn-link { display: inline-block; background: none; border: none; color: var(--hot); font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; padding: 12px 4px; min-height: 44px; line-height: 20px; }
 .btn-danger { color: #a3122f; }
 .stack > * + * { margin-top: 8px; }
 
@@ -105,9 +105,6 @@ input[type=number] { -moz-appearance: textfield; }
 .plan-list .pl-name { font-weight: 700; }
 .plan-list .pl-dose { color: var(--text-mid); text-align: right; white-space: nowrap; }
 .plan-list .pl-group { font-size: 12px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; padding-top: 12px; border-bottom: none; }
-.why-box { background: var(--surface2); border-radius: 12px; padding: 12px 14px; margin-top: 10px; font-size: 13px; color: var(--text-mid); }
-.why-box p + p { margin-top: 8px; }
-.why-box strong { color: var(--text); }
 
 /* ── Active banner ── */
 .active-banner { width: 100%; text-align: left; background: var(--hot-pale); border: 1.5px solid var(--hot); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; color: var(--hot-deep); }

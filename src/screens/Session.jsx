@@ -23,6 +23,16 @@ function targetLine(ex, grouped) {
   return line;
 }
 
+/** "Heavy week · 5 reps" on a lifting day, the format name otherwise. */
+function summaryLine(session) {
+  const main = session.exercises?.find((e) => e.role === "main");
+  if (session.kind === "lift" && main?.repsLabel) {
+    const reps = main.repsLabel === "max minus 2" ? "max minus 2" : `${main.repsLabel} reps`;
+    return `${session.format.name} week · ${reps}`;
+  }
+  return session.format.name;
+}
+
 function groupSubtitle(name, items) {
   const first = items[0].ex;
   const rounds = first.sets.length;
@@ -46,7 +56,7 @@ function SwapModal({ exercise, inSession, equipment, onSwap, onClose }) {
         {always ? "✓ " : ""}Use this swap every time
       </button>
       <p className="muted" style={{ marginBottom: 12 }}>
-        Handy when a move bothers a joint. You can undo standing swaps on the Week tab.
+        Handy when a move bothers a joint. You can undo standing swaps under More.
       </p>
       {options.length === 0 && <p className="muted">No alternatives for this slot with your equipment.</p>}
       {options.map((opt) => (
@@ -134,7 +144,7 @@ function ExerciseCard({ ex, index, grouped, barWeight, onUpdateSet, onToggleSet,
         ))}
       </div>
 
-      {weighted && (
+      {weighted && allDone && (
         <div className="feel">
           <div className="feel-q" id={`feel-${index}`}>How did the last set feel? Reps left in the tank:</div>
           <div className="chips" role="group" aria-labelledby={`feel-${index}`}>
@@ -247,13 +257,12 @@ export default function SessionScreen({
 
       <div className="session-body">
         {session.format && (
-          <div className="card">
+          <div className="card session-summary">
             <div className="row wrap">
-              <span className="tag">{session.format.name}</span>
+              <span className="tag">{summaryLine(session)}</span>
               {session.short && <span className="tag amber">Short version</span>}
             </div>
-            <p className="plan-meta">{session.format.tagline}</p>
-            <p className="plan-meta"><span aria-hidden="true">⌚ </span>Tracking on a watch? Start: {watchWorkoutFor(session)}</p>
+            <p className="plan-meta" style={{ marginTop: 8 }}><span aria-hidden="true">⌚ </span>Tracking on a watch? Start: {watchWorkoutFor(session)}</p>
           </div>
         )}
 

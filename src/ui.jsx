@@ -11,6 +11,17 @@ export const fmtRest = (sec) => {
 export const fmtDate = (d, opts = { weekday: "long", month: "short", day: "numeric" }) =>
   new Date(d).toLocaleDateString("en-US", opts);
 
+/** One-line status message. `status` is { text, emoji? } or null; the emoji is decorative. */
+export function StatusLine({ status }) {
+  if (!status?.text) return null;
+  return (
+    <p className="status" role="status">
+      {status.emoji && <span aria-hidden="true">{status.emoji} </span>}
+      {status.text}
+    </p>
+  );
+}
+
 /** A tappable checklist. Items are { text, done, url? }. */
 export function Checklist({ items, onToggle }) {
   return (
