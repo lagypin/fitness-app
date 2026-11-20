@@ -48,6 +48,7 @@ input[type=number] { -moz-appearance: textfield; }
 .header-top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1; gap: 12px; }
 .app-title { font-size: 26px; font-weight: 800; color: var(--on-hot); letter-spacing: -0.02em; line-height: 1.1; }
 .app-sub { font-size: 13px; color: var(--on-hot-soft); margin-top: 3px; }
+.header-link { display: inline-block; color: var(--on-hot); font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; min-height: 44px; line-height: 44px; }
 .week-badge { background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.45); border-radius: 12px; padding: 8px 12px; text-align: center; flex-shrink: 0; }
 .week-badge-num { font-size: 22px; font-weight: 800; color: var(--on-hot); line-height: 1; }
 .week-badge-label { font-size: 12px; font-weight: 700; color: var(--on-hot); margin-top: 2px; }
@@ -204,8 +205,9 @@ input[type=number] { -moz-appearance: textfield; }
 .log-ex-sets { color: var(--text-mid); white-space: nowrap; }
 
 /* ── Why ── */
-.why-card h3 { font-size: 17px; font-weight: 800; line-height: 1.25; }
-.why-card h4 { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); margin-top: 12px; }
+.why-card h2 { font-size: 17px; font-weight: 800; line-height: 1.25; }
+.why-card h3 { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); margin-top: 12px; }
+.why-card { scroll-margin-top: 12px; }
 .why-card p { font-size: 14px; color: var(--text); margin-top: 3px; }
 .why-card ul { list-style: none; margin-top: 4px; }
 .why-card li { font-size: 13px; margin-top: 6px; }

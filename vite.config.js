@@ -5,14 +5,40 @@ import { VitePWA } from "vite-plugin-pwa";
 
 const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
 
+// The Why page lives at /why. Vercel serves why.html there (see vercel.json);
+// this does the same for `vite` and `vite preview`.
+const serveWhy = (req, _res, next) => {
+  const [path, query] = req.url.split("?");
+  if (path === "/why") req.url = "/why.html" + (query ? `?${query}` : "");
+  next();
+};
+const whyPage = () => ({
+  name: "move-why-page",
+  configureServer(server) { server.middlewares.use(serveWhy); },
+  configurePreviewServer(server) { server.middlewares.use(serveWhy); },
+});
+
 export default defineConfig({
   // The app version shown under More, read from package.json at build time.
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
+  build: {
+    rollupOptions: {
+      input: {
+        main: new URL("./index.html", import.meta.url).pathname,
+        why: new URL("./why.html", import.meta.url).pathname,
+      },
+    },
+  },
   plugins: [
+    whyPage(),
     react(),
     VitePWA({
       registerType: "autoUpdate",
       workbox: {
+        // /why is its own page, never the app shell. It is precached under its
+        // own URL so it opens offline too; the revision changes every build.
+        navigateFallbackDenylist: [/^\/why(\?|#|$)/],
+        additionalManifestEntries: [{ url: "/why", revision: `${pkg.version}-${Date.now()}` }],
         // Keep the web font available offline after the first visit.
         runtimeCaching: [
           {

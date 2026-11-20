@@ -342,5 +342,4 @@ export const PRINCIPLES = [
   },
 ];
 
-export const principleById = (id) => PRINCIPLES.find((p) => p.id === id);
 export const doiUrl = (doi) => `https://doi.org/${doi}`;

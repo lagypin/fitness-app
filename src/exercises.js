@@ -1024,7 +1024,7 @@ export const CATEGORIES = [
   { id: "press",    emoji: "💪",  label: "Press",    desc: "Bench · OHP · push accessories" },
   { id: "pull",     emoji: "🫷",  label: "Pull",     desc: "Rows · ring rows · pull-ups · curls" },
   { id: "core",     emoji: "🔥",  label: "Core",     desc: "Carries · anti-rotation · stability" },
-  { id: "mobility", emoji: "🌸",  label: "Mobility", desc: "Stretching · warm-up · foot care" },
+  { id: "mobility", emoji: "🌸",  label: "Mobility", desc: "Stretching · warm-up · cool-down" },
 ];
 
 // ─── Session templates ────────────────────────────────────────────────────────
