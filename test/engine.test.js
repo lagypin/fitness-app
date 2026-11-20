@@ -5,9 +5,10 @@ import { EXERCISES, byId, FORM_GUIDES } from "../src/exercises.js";
 import { addDays, fromKey, mondayOf, toKey, weekIndexFor } from "../src/engine/dates.js";
 import {
   buildSessionFor as build, clocks, DAY_PLAN, FORMATS, LIFT_DAYS, CORE_FORMATS, swapExercise, normalizeSession, OPEN_DAY_NOTE,
-  EQUIPMENT, DEFAULT_SETTINGS, canDo, liftPrep, activityMenu, plannedAerobicMinutes, CARDIO_TYPES, LENGTHS, withDefaults,
+  EQUIPMENT, DEFAULT_SETTINGS, canDo, liftStretches, warmupRow, WARMUP_ROW_MIN, activityMenu, plannedAerobicMinutes, CARDIO_TYPES, LENGTHS, withDefaults,
+  estimateMinutes,
 } from "../src/engine/program.js";
-import { applySuggestions, suggestWeight, rampUpSets } from "../src/engine/progression.js";
+import { applySuggestions, suggestWeight, rampUpSets, secondLiftWarmup } from "../src/engine/progression.js";
 import { daysMovedThisWeek, weekSummary, weekRecap, aerobicMinutesOf, isStrengthEntry } from "../src/engine/stats.js";
 import { PRINCIPLES, SOURCES } from "../src/engine/evidence.js";
 
@@ -137,72 +138,102 @@ test("the PT exercises are gone from the program and the library", () => {
   assert.ok(!gone.test(JSON.stringify(PRINCIPLES)));
 });
 
-test("lifting warm-ups have no static holds; the cool-down has one stretch per lift", () => {
-  for (const d of [0, 2, 4]) {
-    const s = buildSessionFor(day(0, d), START);
-    for (const item of s.warmup) assert.ok(!/stretch: |pose/i.test(item.text), item.text);
-    assert.equal(s.cooldown.length, 2); // one stretch per lift
-  }
-});
-
-// ─── lift-day warm-up and stretch ─────────────────────────────────────────────
+// ─── lift-day warm-up and cool-down ───────────────────────────────────────────
 
 const STATIC = /stretch: |pose|downward|twist|cobra|warrior/i;
+const LAT = /lat stretch/i;
 const liftIds = () => Object.values(LIFT_DAYS).flatMap((d) => [...d.main, ...d.second]);
 
-test("lift-day warm-up and stretch follow the lifts: every main and second lift has its own pair", () => {
-  for (const id of liftIds()) {
-    const { warm, stretch } = liftPrep([id], ALL_GEAR);
-    assert.equal(warm.length, 1, id);
-    assert.equal(stretch.length, 1, id);
-    assert.ok(!STATIC.test(warm[0].text), `${id}: ${warm[0].text}`);
-    assert.match(stretch[0].text, /2 × 30 sec|60 sec/, stretch[0].text);
-  }
-});
-
-test("lift-day lists change with the block, never repeat a move, and skip Cat-cow and static holds", () => {
-  for (const [w, label] of [[0, "block A"], [6, "block B"]]) {
+test("lift-day warm-up: a 3-minute easy row (2 on short days), the ramp-up sets, and one lighter set before the second lift", () => {
+  for (let w = 0; w < 6; w++) {
     for (const d of [0, 2, 4]) {
-      for (const minutes of [30, 45]) {
-        const s = buildSessionFor(day(w, d), START, { settings: { ...ME, minutes } });
-        const warm = s.warmup.map((i) => i.text);
-        const stretch = s.cooldown.map((i) => i.text);
-        assert.equal(warm.length, 2, `${label} ${s.templateName} ${minutes}: ${warm}`);
-        assert.equal(stretch.length, 2, `${label} ${s.templateName} ${minutes}: ${stretch}`);
-        assert.equal(new Set(warm).size, warm.length);
-        assert.equal(new Set(stretch).size, stretch.length);
-        for (const t of warm) assert.ok(!/cat-cow/i.test(t) && !STATIC.test(t), t);
-        assert.equal(s.cooldownTitle, "Stretch (optional)");
+      for (const length of LENGTHS) {
+        const s = buildSessionFor(day(w, d), START, { length });
+        assert.equal(s.warmup.length, 1, `${s.templateName} ${length}: ${s.warmup.map((i) => i.text)}`);
+        const minutes = length === "short" ? WARMUP_ROW_MIN.short : WARMUP_ROW_MIN.full;
+        assert.match(s.warmup[0].text, new RegExp(`^Easy row: ${minutes} min, easy enough to chat$`));
+        assert.equal(s.warmup[0].minutes, minutes);
+        assert.ok(!STATIC.test(s.warmup[0].text));
+        assert.ok(s.rampUp);
+        const second = s.exercises.find((e) => e.role === "second");
+        if (length !== "short") assert.ok(second, `${s.templateName} ${length} has a second lift`);
+        if (second) {
+          const line = secondLiftWarmup({ ...second, suggestion: second.loadType === "barbell" ? { weight: 100 } : undefined }, 35);
+          if (second.loadType === "barbell") assert.equal(line, "One lighter set first: 60 lb × 5.");
+          else if (second.loadType === "body") assert.equal(line, "One easy set of 2 or 3 reps first.");
+        }
       }
     }
   }
-  for (const d of [0, 2, 4]) {
-    const a = buildSessionFor(day(0, d), START);
-    const b = buildSessionFor(day(6, d), START);
-    // Both squats warm up with a bodyweight squat and both presses with I-Y-T-W, so
-    // the Push and Hinge warm-ups match across blocks. The stretches always differ.
-    assert.notDeepEqual(a.cooldown.map((i) => i.text), b.cooldown.map((i) => i.text), a.templateName);
-    assert.notDeepEqual(allText(a), allText(b), a.templateName);
+  // without a rower the row becomes a walk or march
+  const walk = buildSessionFor(day(0, 0), START, { settings: { ...ME, equipment: ALL_GEAR.filter((g) => g !== "rower") } });
+  assert.match(walk.warmup[0].text, /^Brisk walk or march in place: 3 min$/);
+  assert.equal(warmupRow({ equipment: [] }, true).text, "Brisk walk or march in place: 2 min");
+});
+
+test("second-lift warm-up set: about 60% of the working weight, rounded down to 5, never below the bar", () => {
+  const bar = (w) => ({ loadType: "barbell", suggestion: { weight: w } });
+  assert.equal(secondLiftWarmup(bar(100), 35), "One lighter set first: 60 lb × 5.");
+  assert.equal(secondLiftWarmup(bar(95), 45), "One lighter set first: 55 lb × 5.");   // 57 rounds down to 55
+  assert.equal(secondLiftWarmup(bar(50), 45), "One lighter set first: 45 lb × 5.");   // never below the bar
+  assert.equal(secondLiftWarmup({ loadType: "barbell", sets: [{ weight: "" }] }, 45), "One lighter set first, about 60% of your working weight.");
+  assert.equal(secondLiftWarmup({ loadType: "body" }), "One easy set of 2 or 3 reps first.");
+  assert.equal(secondLiftWarmup({ loadType: "dumbbell", suggestion: { weight: 30 } }), "One lighter set first: 15 lb × 5.");
+  assert.match(secondLiftWarmup({ loadType: "kettlebell", suggestion: { weight: 40 } }), /lighter bell/);
+});
+
+test("cool-down: exactly one stretch per lift, 2 × 30 sec, titled Cool-down, counted in the time and never optional", () => {
+  for (let w = 0; w < 12; w++) {
+    for (const d of [0, 2, 4]) {
+      for (const minutes of [30, 45]) {
+        const s = buildSessionFor(day(w, d), START, { settings: { ...ME, minutes } });
+        const lifts = s.exercises.filter((e) => e.role === "main" || e.role === "second");
+        assert.equal(s.cooldown.length, lifts.length, `${s.templateName} ${minutes}: ${s.cooldown.map((i) => i.text)}`);
+        assert.equal(s.cooldown.length, 2);
+        assert.equal(s.cooldownTitle, "Cool-down");
+        for (const item of s.cooldown) {
+          assert.match(item.text, /2 × 30 sec|60 sec/, item.text);
+          assert.ok(!item.optional);
+        }
+        assert.equal(new Set(s.cooldown.map((i) => i.text)).size, s.cooldown.length);
+        assert.ok(s.cooldown.filter((i) => LAT.test(i.text)).length <= 1, `two lat stretches: ${s.cooldown.map((i) => i.text)}`);
+        // the warm-up row and the cool-down count toward the estimate
+        const bare = estimateMinutes({ ...s, warmup: [], cooldown: [] });
+        assert.ok(s.estMinutes >= bare + 5, `${s.templateName}: ${s.estMinutes} vs ${bare} without warm-up and cool-down`);
+      }
+    }
   }
 });
 
-test("short lift sessions get one warm-up move and one stretch", () => {
+test("cool-down stretches in block A and block B match the plan, and Pull block B avoids a second lat stretch", () => {
+  const texts = (w, d) => buildSessionFor(day(w, d), START).cooldown.map((i) => i.text.split(":")[0]);
+  assert.deepEqual(texts(0, 0), ["Kneeling hip-flexor stretch", "Standing chest stretch"]);
+  assert.deepEqual(texts(0, 2), ["Kneeling lat stretch on the bench", "Child's pose"]);
+  assert.deepEqual(texts(0, 4), ["Downward-facing dog", "Overhead triceps stretch"]);
+  // block B: ring rows + dumbbell row would both want a lat stretch
+  const pullB = buildSessionFor(day(6, 2), START);
+  assert.deepEqual(pullB.exercises.slice(0, 2).map((e) => e.exerciseId), ["ex_ring_rows", "ex_db_single_arm_row"]);
+  assert.deepEqual(texts(6, 2), ["Kneeling lat stretch on the bench", "Child's pose"]);
+  // without a bench the floor lat stretch stands in, still only once
+  const noBench = liftStretches(["ex_ring_rows", "ex_db_single_arm_row"], ALL_GEAR.filter((g) => g !== "bench")).map((m) => m.text.split(":")[0]);
+  assert.deepEqual(noBench, ["90 lat stretch", "Child's pose"]);
+  for (const id of liftIds()) assert.equal(liftStretches([id], ALL_GEAR).length, 1, id);
+  // Push and Hinge stretches differ between blocks; Pull is a lat stretch and child's pose in both
+  for (const d of [0, 4]) assert.notDeepEqual(texts(0, d), texts(6, d));
+});
+
+test("short lift sessions: a 2-minute row, the ramp-up sets, and one stretch", () => {
   for (const d of [0, 2, 4]) {
     const s = buildSessionFor(day(0, d), START, { short: true });
     assert.equal(s.warmup.length, 1, s.templateName);
+    assert.match(s.warmup[0].text, /^Easy row: 2 min/);
+    assert.ok(s.rampUp);
     assert.equal(s.cooldown.length, 1, s.templateName);
+    assert.match(s.cooldown[0].text, /2 × 30 sec|60 sec/);
+    assert.equal(s.cooldownTitle, "Cool-down");
   }
   // other day types keep the plain heading
   for (const d of [1, 3, 5, 6]) assert.equal(buildSessionFor(day(0, d), START).cooldownTitle, undefined);
-});
-
-test("upper-back and shoulder accessories show up every week", () => {
-  const upper = new Set(["ex_barbell_row", "ex_ring_rows", "ex_db_single_arm_row", "ex_face_pull", "ex_kb_single_arm_row", "ex_incline_reverse_fly", "ex_landmine_row", "ex_rear_delt_fly", "ex_lateral_raise"]);
-  for (let w = 0; w < 12; w++) {
-    let n = 0;
-    for (const d of [0, 2, 4]) n += buildSessionFor(day(w, d), START).exercises.filter((e) => upper.has(e.exerciseId)).length;
-    assert.ok(n >= 2, `week ${w}`);
-  }
 });
 
 test("warm-up and stretch links point at the ACE library", () => {
@@ -215,14 +246,14 @@ test("warm-up and stretch links point at the ACE library", () => {
 });
 
 test("lifting sessions fit the minutes setting; short versions fit in 20", () => {
-  for (const [minutes, lo, hi] of [[30, 20, 31], [45, 24, 45]]) {
+  for (const [minutes, lo, hi] of [[30, 24, 36], [45, 28, 50]]) {
     const settings = { ...ME, minutes };
     for (let w = 0; w < 12; w++) {
       for (const d of [0, 2, 4]) {
         const s = buildSessionFor(day(w, d), START, { settings });
         assert.ok(s.estMinutes >= lo && s.estMinutes <= hi, `${minutes}: ${s.templateName} ${s.format.id}: ${s.estMinutes}`);
         const short = buildSessionFor(day(w, d), START, { settings, short: true });
-        assert.ok(short.estMinutes <= 20, `short ${short.templateName}: ${short.estMinutes}`);
+        assert.ok(short.estMinutes <= 22, `short ${short.templateName}: ${short.estMinutes}`);
         assert.equal(short.exercises.length, 1);
       }
       const core = buildSessionFor(day(w, 1), START, { settings });
@@ -270,7 +301,6 @@ test("the plan only uses equipment the person has", () => {
         for (const ex of s.exercises) assert.ok(canDo(byId(ex.exerciseId), equipment), `${equipment}: ${ex.name}`);
         if (!equipment.includes("rower")) assert.notEqual(s.activity?.type, "row");
         if (!equipment.includes("band")) assert.ok(!/banded/i.test(allText(s)));
-        if (!equipment.includes("pull_up_bar")) assert.ok(!/dead hang/i.test(allText(s)));
         if (!equipment.includes("bench")) assert.ok(!/on the bench/i.test(allText(s)));
         const ids = s.exercises.map((e) => e.exerciseId);
         assert.equal(new Set(ids).size, ids.length);

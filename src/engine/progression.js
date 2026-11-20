@@ -164,3 +164,17 @@ export function rampUpSets(exercise, barWeight = DEFAULT_BAR_WEIGHT) {
   if (most > half && most < w) steps.push(`${most} × 3`);
   return [steps.join(", then ") + "."];
 }
+
+/** One lighter set before the second lift: about 60% of the working weight, never below the bar. */
+export function secondLiftWarmup(exercise, barWeight = DEFAULT_BAR_WEIGHT) {
+  const { loadType } = exercise;
+  if (!loadType || loadType === "body") return "One easy set of 2 or 3 reps first.";
+  if (loadType === "kettlebell") return "One easy set with a lighter bell first.";
+  const w = num(exercise.suggestion?.weight ?? exercise.sets?.[0]?.weight);
+  if (!w) return "One lighter set first, about 60% of your working weight.";
+  const step = STEP[loadType] || 5;
+  let light = floorTo(w * 0.6, step);
+  if (loadType === "barbell" || loadType === "landmine") light = Math.max(barWeight, light);
+  if (loadType === "dumbbell") light = Math.max(DUMBBELL_RANGE[0], light);
+  return `One lighter set first: ${light} lb × 5.`;
+}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FORM_GUIDES, swapOptions } from "../exercises.js";
 import { ACTIVITIES, canDo, watchWorkoutFor } from "../engine/program.js";
-import { rampUpSets } from "../engine/progression.js";
+import { rampUpSets, secondLiftWarmup } from "../engine/progression.js";
 import { ActivityPicker, Checklist, Modal, fmtClock, fmtDate, fmtRest } from "../ui.jsx";
 
 const ROLE_LABEL = { main: "Main lift", second: "Second lift" };
@@ -86,6 +86,9 @@ function ExerciseCard({ ex, index, grouped, barWeight, onUpdateSet, onToggleSet,
       )}
       {ex.role === "main" && (
         <div className="ex-suggest"><strong>Ramp up:</strong> {rampUpSets(ex, barWeight)[0]}</div>
+      )}
+      {ex.role === "second" && (
+        <div className="ex-suggest"><strong>Warm up:</strong> {secondLiftWarmup(ex, barWeight)}</div>
       )}
       {ex.loadType === "body" && (ex.role === "main" || ex.role === "second") && ex.unit === "reps" && ex.repsLabel !== "max minus 2" && (
         <div className="ex-suggest">Bodyweight: change your body angle or foot position to make it harder or easier.</div>

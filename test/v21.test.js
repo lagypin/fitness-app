@@ -106,9 +106,10 @@ test("a 45-minute day is longer than a 30-minute day for every planned day, and 
       const s45 = buildSessionFor(d, START, { length: 45, settings });
       const sh = buildSessionFor(d, START, { length: "short", settings });
       assert.ok(total(s45) > total(s30), `${s30.templateName} ${toKey(d)}: ${total(s30)} vs ${total(s45)}`);
-      assert.ok(total(s30) <= 31, `${s30.templateName} at 30: ${total(s30)}`);
-      assert.ok(total(s45) >= 35 && total(s45) <= 46, `${s45.templateName} at 45: ${total(s45)}`);
-      assert.ok(total(sh) <= 20, `${sh.templateName} short: ${total(sh)}`);
+      // Lifting days now carry a 3-minute row and a counted cool-down, so they run a few minutes past the label.
+      assert.ok(total(s30) <= 36, `${s30.templateName} at 30: ${total(s30)}`);
+      assert.ok(total(s45) >= 35 && total(s45) <= 50, `${s45.templateName} at 45: ${total(s45)}`);
+      assert.ok(total(sh) <= 22, `${sh.templateName} short: ${total(sh)}`);
       assert.ok(sh.short);
       // the per-day length and the Settings default build the same day
       const viaSettings = buildSessionFor(d, START, { settings: { ...settings, minutes: 45 } });

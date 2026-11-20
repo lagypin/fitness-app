@@ -205,6 +205,12 @@ export const SOURCES = {
     journal: "International Journal of Behavioral Nutrition and Physical Activity",
     doi: "10.1186/s12966-020-01045-z",
   },
+  fradkin2010: {
+    cite: "Fradkin et al., 2010",
+    title: "Effects of warming-up on physical performance: a systematic review with meta-analysis",
+    journal: "Journal of Strength and Conditioning Research",
+    doi: "10.1519/JSC.0b013e3181c643a0",
+  },
   dossantos2022: {
     cite: "Dos Santos et al., 2022",
     title: "Association of the \"Weekend Warrior\" and Other Leisure-time Physical Activity Patterns With All-Cause and Cause-Specific Mortality: A Nationwide Cohort Study",
@@ -296,11 +302,11 @@ export const PRINCIPLES = [
   },
   {
     id: "warmup",
-    title: "Warm up for the lifts you are about to do, stretch after if you like",
-    rule: "On lifting days the warm-up is one dynamic move for the main lift and one for the second lift, then lighter ramp-up sets of the main lift. Afterward there is an optional stretch for each of those lifts, 2 × 30 seconds. It is there for flexibility, not recovery, and a session can be finished without it.",
-    evidence: "A review of time-efficient training advises limiting the warm-up to lighter sets of the exercise you are about to do. Static holds of 60 seconds or less per muscle before lifting trim strength by only 1 to 2%, and longer holds by 4 to 7.5%, while dynamic moves give small-to-moderate improvements. A meta-analysis of 10 trials found that stretching after exercise did not reduce soreness or speed strength recovery compared with rest, and a narrative review found that active cool-downs do not improve next-day performance or prevent injuries. A 2025 expert consensus reached the same conclusion on recovery.",
-    limits: "Most of these studies are small and enrolled young, trained men. Which moves to pair with each lift was a judgment call, and no trial tested this set.",
-    sources: ["iversen2021", "chaabene2019", "behm2015", "afonso2021recovery", "vanhooren2018", "warneke2025"],
+    title: "Warm up with easy cardio and lighter sets, cool down with two stretches",
+    rule: "Lifting days open with about 3 minutes of easy rowing (brisk walking without a rower), then lighter ramp-up sets of the main lift and one lighter set before the second lift. About 5 minutes in all. They close with a cool-down: one static stretch for each of those two lifts, 2 × 30 seconds, about 3 minutes. The cool-down is for flexibility and counts toward the session. Short days row for 2 minutes and finish with one stretch.",
+    evidence: "A meta-analysis of 32 studies found that warming up improved performance in 79% of the measures tested, with little evidence of harm. A review of time-efficient training advises keeping the warm-up to lighter sets of the exercise you are about to do. Static holds before lifting trim strength a little (1 to 2% for holds of 60 seconds or less), which is why the stretches come after. The American College of Sports Medicine recommends 60 seconds in total per stretch, and notes that stretching is most effective when the muscles are warm. A meta-analysis of 10 trials found that stretching after exercise did not reduce soreness or speed strength recovery compared with rest, and a narrative review found that active cool-downs do not improve next-day performance or prevent injuries. A 2025 expert consensus reached the same conclusion on recovery.",
+    limits: "Most of these studies are small and enrolled young, trained men. The warm-up meta-analysis pooled many sports and warm-up types. Which stretch to pair with each lift was a judgment call, and no trial tested this set.",
+    sources: ["fradkin2010", "iversen2021", "chaabene2019", "behm2015", "garber2011", "afonso2021recovery", "vanhooren2018", "warneke2025"],
   },
   {
     id: "open",
