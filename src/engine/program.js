@@ -702,6 +702,19 @@ export function swapExercise(current, newId) {
   return makeExercise(newId, current.role || "accessory", spec, current.group || null);
 }
 
+/**
+ * The log entry for a finished session. A lifting session times itself;
+ * anything else (and a lift logged much later) uses the planned length. Works
+ * for sessions version 2.1 left in progress, mobility and surprise included.
+ */
+export function completedEntry(active, now = Date.now()) {
+  const elapsed = Math.round((now - (active.startedAt || now)) / 60000);
+  const lifted = (active.exercises || []).length > 0;
+  const planned = (active.estMinutes || 0) + (active.activity?.minutes || 0);
+  const durationMin = lifted && elapsed >= 5 && elapsed <= 150 ? elapsed : planned;
+  return { ...active, completed: true, completedAt: new Date(now).toISOString(), durationMin };
+}
+
 /** Older saved sessions stored warm-ups as plain strings. */
 export function normalizeSession(s) {
   if (!s) return s;

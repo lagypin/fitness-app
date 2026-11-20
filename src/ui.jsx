@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { splitEmoji } from "./cheers.js";
 
 export const fmtClock = (sec) => `${Math.floor(sec / 60)}:${String(Math.max(0, sec % 60)).padStart(2, "0")}`;
 
@@ -19,6 +20,32 @@ export function StatusLine({ status }) {
       {status.emoji && <span aria-hidden="true">{status.emoji} </span>}
       {status.text}
     </p>
+  );
+}
+
+/** Words plus a decorative emoji that screen readers skip. */
+function Line({ text, as: Tag = "span", className, innerRef, ...rest }) {
+  const parts = splitEmoji(text);
+  return (
+    <Tag className={className} ref={innerRef} {...rest}>
+      {parts.text}
+      {parts.emoji && <span aria-hidden="true"> {parts.emoji}</span>}
+    </Tag>
+  );
+}
+
+/** The card shown after Finish and save. `finish` is { emoji, line, fact?, name }. Focus moves to its heading. */
+export function FinishCard({ finish, onDone }) {
+  const heading = useRef(null);
+  useEffect(() => { heading.current?.focus(); }, []);
+  return (
+    <section className="card finish-card" aria-label="Session saved">
+      <div className="finish-emoji" aria-hidden="true">{finish.emoji}</div>
+      <Line as="h2" className="finish-title" text={finish.line} tabIndex={-1} innerRef={heading} />
+      {finish.fact && <Line as="p" className="finish-fact" text={finish.fact} />}
+      <p className="muted" style={{ marginTop: 6 }}>Saved: {finish.name}.</p>
+      <button type="button" className="btn-primary" style={{ marginTop: 14 }} onClick={onDone}>Done</button>
+    </section>
   );
 }
 

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import "./styles.css";
 import { byId } from "./exercises.js";
-import { ACTIVITIES, buildSessionFor, normalizeSession, swapExercise, withDefaults } from "./engine/program.js";
+import { ACTIVITIES, buildSessionFor, completedEntry, normalizeSession, swapExercise, withDefaults } from "./engine/program.js";
 import { applySuggestions } from "./engine/progression.js";
-import { daysMovedThisWeek, weekSummary } from "./engine/stats.js";
+import { daysMovedThisWeek, newTopWeights, weekSummary } from "./engine/stats.js";
+import { CELEBRATION_EMOJI, WORKOUT_LINES, chooseFact, pickLine, quickLinesFor, splitEmoji } from "./cheers.js";
 import { entryDayKey, fromKey, mondayOf, toKey } from "./engine/dates.js";
 import { KEYS, LS, dropRetiredKeys, uid } from "./storage.js";
 import { keepAwake, release as releaseWakeLock } from "./wakeLock.js";
@@ -39,6 +40,9 @@ export default function App() {
   const [lengths, setLengths] = useState(() => LS.get(KEYS.lengths, {}));
   const [programStart] = useState(initialProgramStart);
   const [status, setStatus] = useState(null); // { text, emoji? }
+  const [finish, setFinish] = useState(null); // { emoji, line, fact?, name } after Finish and save
+  const [recentCheers, setRecentCheers] = useState(() => LS.get(KEYS.cheersRecent, []));
+  const [recentQuick, setRecentQuick] = useState(() => LS.get(KEYS.cheersRecentQuick, []));
 
   // Roll over to the new day when the app comes back to the foreground.
   useEffect(() => {
@@ -87,6 +91,7 @@ export default function App() {
     const now = new Date();
     saveActive({ ...p, id: uid(), planDayKey: p.dayKey, dayKey: toKey(now), date: now.toISOString(), startedAt: now.getTime() });
     say(null);
+    setFinish(null);
     setShowSession(true);
   }
 
@@ -101,17 +106,29 @@ export default function App() {
   }
 
   function complete() {
-    const elapsed = Math.round((Date.now() - (active.startedAt || Date.now())) / 60000);
-    const lifted = active.exercises.length > 0;
-    const planned = active.estMinutes + (active.activity?.minutes || 0);
-    // A lifting session times itself; anything else (and a lift logged much later) uses the planned length.
-    const durationMin = lifted && elapsed >= 5 && elapsed <= 150 ? elapsed : planned;
-    saveSessions([...sessions, { ...active, completed: true, completedAt: new Date().toISOString(), durationMin }]);
+    const entry = completedEntry(active);
+    const next = [...sessions, entry];
+    saveSessions(next);
     saveActive(null);
     releaseWakeLock();
     setShowSession(false);
     setTab("today");
-    say(`Saved: ${active.templateName}. Nice work.`);
+    say(null);
+    // The finish card: a line that has not shown lately, and sometimes a fact from the log.
+    const monday = mondayOf(today);
+    const before = weekSummary(sessions, monday);
+    const after = weekSummary(next, monday);
+    const { line, recent } = pickLine(WORKOUT_LINES, recentCheers);
+    setRecentCheers(recent); LS.set(KEYS.cheersRecent, recent);
+    const fact = chooseFact({
+      newTops: newTopWeights(entry, sessions),
+      kind: entry.kind,
+      liftDays: after.entries.filter((s) => s.kind === "lift").length,
+      strengthDaysBefore: before.strengthDays,
+      strengthDays: after.strengthDays,
+      aerobicMinutes: after.aerobicMinutes,
+    });
+    setFinish({ emoji: CELEBRATION_EMOJI[Math.floor(Math.random() * CELEBRATION_EMOJI.length)], line, fact, name: entry.templateName });
   }
 
   function quickLog(activity) {
@@ -121,7 +138,10 @@ export default function App() {
       id: uid(), kind: "activity", templateId: activity.type, templateName: a.label, emoji: a.emoji,
       date: now.toISOString(), dayKey: toKey(now), exercises: [], activity, durationMin: activity.minutes, completed: true,
     }]);
-    say(`${a.label}, ${activity.minutes} min logged.`);
+    const { line, recent } = pickLine(quickLinesFor(activity.type), recentQuick);
+    setRecentQuick(recent); LS.set(KEYS.cheersRecentQuick, recent);
+    const { text, emoji } = splitEmoji(line);
+    say(`${text} ${a.label}, ${activity.minutes} min logged.`, emoji);
   }
 
   function swap(exIndex, newId, always) {
@@ -226,6 +246,7 @@ export default function App() {
             today={today} selectedKey={selectedKey} onSelect={setSelectedKey}
             plan={plan} length={lengthFor(selectedKey)} onLength={setLength} settings={settings}
             planDone={planDone} doneKeys={doneKeys} status={status}
+            finish={finish} onFinishDone={() => setFinish(null)}
             activeSession={active} onResume={resume}
             onStart={() => start(plan)}
             onQuickLog={quickLog}

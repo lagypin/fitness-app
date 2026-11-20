@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { exportCsvs } from "../engine/export.js";
+import { mergeSessions, parseBackup } from "../engine/backup.js";
 import { isPreview } from "../platform.js";
 
 /** Back up, Restore, and Export CSV. Backups from version 2.1 (`version: 2`) restore as before. */
@@ -51,10 +52,7 @@ export default function YourData({ sessions, extras, onReplace }) {
     e.target.value = "";
     if (!file) return;
     try {
-      const data = JSON.parse(await file.text());
-      const incoming = Array.isArray(data) ? data : data.sessions;
-      if (!Array.isArray(incoming)) throw new Error("that file is not a Move backup");
-      setPending(incoming);
+      setPending(parseBackup(JSON.parse(await file.text())));
       setMessage("");
     } catch (err) {
       setMessage(`Couldn't read the file: ${err.message}.`);
@@ -63,10 +61,7 @@ export default function YourData({ sessions, extras, onReplace }) {
 
   function finishImport(mode) {
     if (mode === "replace") onReplace(pending);
-    if (mode === "merge") {
-      const ids = new Set(sessions.map((s) => s.id));
-      onReplace([...sessions, ...pending.filter((s) => !ids.has(s.id))].sort((a, b) => new Date(a.date) - new Date(b.date)));
-    }
+    if (mode === "merge") onReplace(mergeSessions(sessions, pending));
     if (mode !== "cancel") setMessage(`Imported ${pending.length} entries.`);
     setPending(null);
   }

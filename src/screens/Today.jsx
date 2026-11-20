@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ACTIVITIES, DAY_PLAN, LENGTHS, activityMenu } from "../engine/program.js";
 import { addDays, dayIndex, DAY_NAMES, fromKey, mondayOf, toKey } from "../engine/dates.js";
-import { ActivityPicker, Modal, StatusLine } from "../ui.jsx";
+import { ActivityPicker, FinishCard, Modal, StatusLine } from "../ui.jsx";
 
 const LENGTH_LABEL = { short: "Short", 30: "30 min", 45: "45 min" };
 
@@ -67,7 +67,7 @@ function QuickLog({ onSave, onClose, initialType, activities }) {
 
 export default function TodayScreen({
   today, selectedKey, onSelect, plan, length, onLength, settings, planDone, doneKeys, activeSession,
-  onResume, onStart, onQuickLog, status,
+  onResume, onStart, onQuickLog, status, finish, onFinishDone,
 }) {
   const [quick, setQuick] = useState(null);
   const monday = mondayOf(today);
@@ -81,6 +81,7 @@ export default function TodayScreen({
 
   return (
     <>
+      {finish && <FinishCard finish={finish} onDone={onFinishDone} />}
       <StatusLine status={status} />
 
       {activeSession && (

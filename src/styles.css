@@ -107,6 +107,13 @@ input[type=number] { -moz-appearance: textfield; }
 .plan-list .pl-dose { color: var(--text-mid); text-align: right; white-space: nowrap; }
 .plan-list .pl-group { font-size: 12px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; padding-top: 12px; border-bottom: none; }
 
+/* ── Finish card ── */
+.finish-card { text-align: center; border-color: var(--hot); border-width: 2px; }
+.finish-emoji { font-size: 44px; line-height: 1; margin-bottom: 8px; }
+.finish-title { font-size: 20px; font-weight: 800; line-height: 1.25; letter-spacing: -0.01em; }
+.finish-title:focus-visible { outline-offset: 6px; }
+.finish-fact { font-size: 14px; font-weight: 700; color: var(--hot-deep); margin-top: 8px; }
+
 /* ── Active banner ── */
 .active-banner { width: 100%; text-align: left; background: var(--hot-pale); border: 1.5px solid var(--hot); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; color: var(--hot-deep); }
 .active-banner-text { font-size: 15px; font-weight: 800; }

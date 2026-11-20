@@ -7,6 +7,8 @@ export const KEYS = {
   settings: "move_settings",       // minutes per day, equipment, bar weight, outdoor options
   swaps: "move_swaps",             // standing swaps: { originalExerciseId: replacementId }
   lengths: "move_lengths",         // per-day length picks: { dayKey: "short" | 30 | 45 }
+  cheersRecent: "move_cheers_recent",            // the last few finish lines shown, so none repeats soon
+  cheersRecentQuick: "move_cheers_recent_quick", // the same for walk and quick-log lines
 };
 
 /** Keys that older versions wrote and this one no longer reads. Removed on load. */

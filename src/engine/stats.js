@@ -71,6 +71,27 @@ export function weekSummary(sessions, monday) {
 const topWeight = (ex) =>
   Math.max(0, ...(ex.sets || []).filter((s) => s.done).map((s) => parseFloat(s.weight) || 0));
 
+/**
+ * Exercises in `session` whose heaviest done set beats every done set of that
+ * exercise in `prior` (the entries saved before it). Exercises with no earlier
+ * weighted history are skipped, so a first-time lift is never a record.
+ */
+export function newTopWeights(session, prior) {
+  const best = new Map();
+  for (const s of prior) {
+    for (const ex of s.exercises || []) {
+      const w = topWeight(ex);
+      if (w > 0) best.set(ex.exerciseId, Math.max(w, best.get(ex.exerciseId) || 0));
+    }
+  }
+  const out = [];
+  for (const ex of session.exercises || []) {
+    const w = topWeight(ex);
+    if (w > 0 && best.has(ex.exerciseId) && w > best.get(ex.exerciseId)) out.push(ex.name);
+  }
+  return out;
+}
+
 /** Lifts whose top weight this week beat everything logged before this week. */
 export function liftsThatWentUp(sessions, monday) {
   const start = toKey(monday);
